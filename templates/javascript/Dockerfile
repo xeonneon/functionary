@@ -11,13 +11,10 @@ RUN addgroup --gid 1001 --system app && \
 
 USER app
 
-COPY helper/resources/javascript/package.json .
+#COPY package.json .
 
-COPY helper/src/javascript/main.js .
-
-COPY *.js .
+COPY package.json *.js ./
 
 RUN npm install || true
-RUN ls -al
 
 ENTRYPOINT ["node", "main.js"]

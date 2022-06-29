@@ -1,18 +1,23 @@
+import argparse
 import json
+import logging
+import sys
 
-import click
-from _plugin import functions
+import functions
 
-
-@click.command()
-@click.option("--function", help="The plugin function to execute", required=True)
-@click.option("--parameters", help="JSON str of parameters to pass to the function")
-def main(function: str, parameters: str):
-    parameters = parameters or "{}"
-    result = getattr(functions, function)(**json.loads(parameters))
-
-    print(result)
-
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", "--function", help="the function to call")
+    parser.add_argument(
+        "-p",
+        "--parameters",
+        help="the parameters to pass to the function in JSON format",
+    )
+
+    args = parser.parse_args()
+
+    retVal = getattr(functions, args.function)(**json.loads(args.parameters))
+
+    print(f"==== Output From Command ====\n{str(retVal) if retVal else ''}")

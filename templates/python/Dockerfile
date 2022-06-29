@@ -1,26 +1,21 @@
 FROM python:3.10-slim
 
-ARG install_dir=/opt/frunner
-
+ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-ENV PYTHONPATH "${PATH}:.:${install_dir}/_plugin"
 
-# initial setup
-RUN apt-get -y update && \
-    useradd --no-log-init -m frunner && \
-    mkdir -p $install_dir
-WORKDIR $install_dir
+WORKDIR /usr/src/app
 
-# pip installs
-COPY requirements.txt $install_dir/
-RUN pip install --upgrade pip && \
-    pip install -r $install_dir/requirements.txt
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
-COPY launch_plugin main.py _schema.json $install_dir/
-COPY _plugin $install_dir/_plugin
-COPY _utils $install_dir/_utils
+COPY requirements.txt .
 
-USER frunner
-EXPOSE 8000
+RUN pip install -r ./requirements.txt
 
-ENTRYPOINT ["./launch_plugin"]
+RUN addgroup --gid 1001 --system app && \
+    adduser --no-create-home --shell /bin/false --disabled-password --uid 1001 --system --group app
+
+USER app
+
+COPY *.py ./
+
+ENTRYPOINT ["python", "main.py"]
