@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_DIR=`dirname -- $0`
-BUILD_CONTEXT="${SCRIPT_DIR}/../.."
+BUILD_CONTEXT="${SCRIPT_DIR}/.."
 
 docker build -f $SCRIPT_DIR/runner.Dockerfile -t plugin_runner:latest $BUILD_CONTEXT
 
