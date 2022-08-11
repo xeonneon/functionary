@@ -1,3 +1,4 @@
+import os
 import pathlib
 import shutil
 import tarfile
@@ -5,7 +6,6 @@ import tarfile
 import click
 import requests
 import yaml
-import os
 
 from .tokens import TokenError, getToken
 

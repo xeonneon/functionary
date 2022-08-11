@@ -3,7 +3,7 @@ import logging
 
 from celery import chain
 
-from .handlers import pull_image, publish_result, run_task
+from .handlers import publish_result, pull_image, run_task
 from .message_queue import build_connection
 
 logger = logging.getLogger(__name__)

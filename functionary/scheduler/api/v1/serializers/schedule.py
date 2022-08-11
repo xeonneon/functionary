@@ -1,5 +1,6 @@
 """ Schedule serializers """
 from rest_framework.serializers import ModelSerializer
+
 from scheduler.models import Schedule
 
 
