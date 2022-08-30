@@ -5,8 +5,9 @@ import tarfile
 import click
 import yaml
 
-from .client import post
+from .client import get, post
 from .config import get_config_value
+from .utils import format_results
 
 
 def create_languages() -> list[str]:
@@ -84,3 +85,18 @@ def publish(ctx, path):
         response = post("publish", files={"package_contents": upload_file})
         id = response["id"]
         click.echo(f"Package upload complete\nBuild id: {id}")
+
+
+@package_cmd.command()
+@click.pass_context
+@click.option("--id", help="check the status of a specific build with given id")
+def buildstatus(ctx, id):
+    """
+    View status for all builds, or build with specific id
+    """
+    if id:
+        results = get(f"builds/{id}")
+        format_results([results], title=f"Build: {id}")
+    else:
+        results = get("builds")
+        format_results(results, title="Build Status")
