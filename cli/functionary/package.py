@@ -4,6 +4,7 @@ import tarfile
 
 import click
 import yaml
+from rich.text import Text
 
 from .client import get, post
 from .config import get_config_value
@@ -96,7 +97,40 @@ def buildstatus(ctx, id):
     """
     if id:
         results = get(f"builds/{id}")
-        format_results([results], title=f"Build: {id}")
+        format_results([results], title=f"Build: {id}", excluded_fields=["environment"])
     else:
         results = get("builds")
-        format_results(results, title="Build Status")
+        format_results(results, title="Build Status", excluded_fields=["environment"])
+
+
+@package_cmd.command()
+@click.pass_context
+def list(ctx):
+    """
+    View all current packages and their functions
+    """
+    packages = get("packages")
+    functions = get("functions")
+    functions_lookup = {}
+
+    for function in functions:
+        package_id = function["package"]
+        function_dict = {}
+        function_dict["Function"] = function["name"]
+        function_dict["Display Name"] = function["display_name"]
+        function_dict["Description"] = function["description"]
+
+        if package_id in functions_lookup:
+            functions_lookup[package_id].append(function_dict)
+        else:
+            functions_lookup[package_id] = [function_dict]
+
+    for package in packages:
+        name = package["name"]
+        id = package["id"]
+        description = package["description"]
+        associated_functions = functions_lookup[id]
+        title = Text(f"{name}", style="bold blue")
+        title.append(f"\n{description}", style="blue dim")
+        format_results(associated_functions, title=title)
+        click.echo("\n")
