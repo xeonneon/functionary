@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_unicorn",
     "rest_framework",
     "rest_framework.authtoken",
     "drf_spectacular",
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
     "core",
     "scheduler",
     "builder",
+    "ui",
 ]
 
 MIDDLEWARE = [
