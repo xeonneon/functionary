@@ -13,7 +13,7 @@ from .utils import format_results
 
 def create_languages() -> list[str]:
     spec = pathlib.Path(__file__).parent.resolve() / "templates"
-    return [str(loc.name) for loc in spec.glob("*")]
+    return [loc.name for loc in spec.glob("*") if loc.is_dir()]
 
 
 def generateYaml(output_dir: str, name: str, language: str):
@@ -51,6 +51,12 @@ def create_cmd(ctx, language, name, output_directory):
 
     Create an example function in the specified language.
     """
+    if "/" in name:
+        ex_path, ex_name = name.rsplit("/", 1)
+        raise click.ClickException(
+            "Your package name looks like a path. Try using this command instead:"
+            f"\n       functionary package create -l {language} -o {ex_path} {ex_name}"
+        )
     dir = pathlib.Path(output_directory) / name
     if not dir.exists():
         dir.mkdir()
