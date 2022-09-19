@@ -1,0 +1,19 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "listener_stop_container",
+      "type": "shell",
+      "command": "docker stop functionary-runner-listener",
+      "hide": true
+    },
+    {
+      "label": "worker_stop_container",
+      "type": "shell",
+      "command": "docker stop functionary-runner-worker",
+      "hide": true
+    }
+  ]
+}
