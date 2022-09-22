@@ -21,3 +21,12 @@
 .environment-select * {
     color: black;
 }
+.errorlist > li {
+    color: red;
+}
+.errors {
+    color: red;
+}
+textarea.input {
+    height: 100px;
+}
