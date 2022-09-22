@@ -12,6 +12,7 @@ class Function(models.Model):
         package: the package that the function is a part of
         name: internal name that published package definition keys off of
         display_name: optional display name
+        summary: short description of the function
         description: more details about the function
         schema: the function's OpenAPI definition
     """
@@ -25,6 +26,7 @@ class Function(models.Model):
     name = models.CharField(max_length=64, blank=False)
 
     display_name = models.CharField(max_length=64, null=True)
+    summary = models.CharField(max_length=128, null=True)
     description = models.TextField(null=True)
     schema = models.JSONField()
 

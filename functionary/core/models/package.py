@@ -15,7 +15,8 @@ class Package(models.Model):
         environment: the environment that this package belongs to
         name: internal name that published package definition keys off of
         display_name: optional display name
-        description: more details about the function
+        summary: summary of the package
+        description: more details about the package
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -25,6 +26,7 @@ class Package(models.Model):
     name = models.CharField(max_length=64, blank=False)
 
     display_name = models.CharField(max_length=64, null=True)
+    summary = models.CharField(max_length=128, null=True)
     description = models.TextField(null=True)
 
     # TODO: Restrict to list of choices?

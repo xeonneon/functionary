@@ -41,6 +41,7 @@ def package_cmd(ctx):
     "-l",
     type=click.Choice(create_languages(), case_sensitive=False),
     required=True,
+    prompt="Select the language",
 )
 @click.option("--output-directory", "-o", type=click.Path(exists=True), default=".")
 @click.argument("name", type=str)
@@ -139,7 +140,12 @@ def list(ctx):
         function_dict = {}
         function_dict["Function"] = function["name"]
         function_dict["Display Name"] = function["display_name"]
-        function_dict["Description"] = function["description"]
+
+        # Use the summary if available to keep the table tidy, otherwise
+        # use the description
+        if not (description := function.get("summary", None)):
+            description = function["description"]
+        function_dict["Description"] = description if description else ""
 
         if package_id in functions_lookup:
             functions_lookup[package_id].append(function_dict)
@@ -149,9 +155,16 @@ def list(ctx):
     for package in packages:
         name = package["name"]
         id = package["id"]
-        description = package["description"]
+        # Use the description since there's more room if it's available,
+        # otherwise use the summary
+        if not (description := package.get("description", None)):
+            description = package["summary"]
         associated_functions = functions_lookup[id]
+
         title = Text(f"{name}", style="bold blue")
-        title.append(f"\n{description}", style="blue dim")
+
+        # Don't show if there's no package summary or description
+        if description:
+            title.append(f"\n{description}", style="blue dim")
         format_results(associated_functions, title=title)
         click.echo("\n")
