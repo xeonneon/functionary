@@ -17,6 +17,9 @@ The easiest way to run these is via the docker-compose.yml available
 # Starting from the root of the functionary repo
 cd docker/
 docker compose up -d
+
+# To initialize the database with the migrations and initial users/teams/environments
+docker exec functionary-django ./init.sh
 ```
 
 Authentication to these services within Functionary is not yet configurable. By
