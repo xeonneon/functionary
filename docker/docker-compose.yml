@@ -21,13 +21,15 @@ services:
   django:
     build:
       context: ../functionary
-      dockerfile: ../docker/debug.Dockerfile
+      dockerfile: ../docker/functionary_rootless.Dockerfile
+      args:
+        uid: 1000
     image: functionary_django
     container_name: functionary-django
     environment:
       <<: *environment
-      DEBUG_PORT: 5678
-      DEBUG_CMD: manage.py runserver 0.0.0.0:8000
+      APP: SERVER
+      APP_PORT: 5678
       WAIT_FOR_CLIENT: ${DJANGO_WAIT_FOR_CLIENT:-}
     networks:
       - functionary-network
@@ -59,13 +61,15 @@ services:
   listener:
     build:
       context: ../functionary
-      dockerfile: ../docker/debug.Dockerfile
+      dockerfile: ../docker/functionary_rootless.Dockerfile
+      args:
+        uid: 1000
     image: functionary_django
     container_name: functionary-listener
     environment:
       <<: *environment
-      DEBUG_PORT: 5683
-      DEBUG_CMD: "./manage.py run_listener"
+      APP: LISTENER
+      APP_PORT: 5683
       WAIT_FOR_CLIENT: ${WORKER_WAIT_FOR_CLIENT:-}
     networks:
       - functionary-network
@@ -79,13 +83,15 @@ services:
   worker:
     build:
       context: ../functionary
-      dockerfile: ../docker/debug.Dockerfile
+      dockerfile: ../docker/functionary_rootless.Dockerfile
+      args:
+        uid: 1000
     image: functionary_django
     container_name: functionary-worker
     environment:
       <<: *environment
-      DEBUG_PORT: 5679
-      DEBUG_CMD: "./manage.py run_worker"
+      APP: WORKER
+      APP_PORT: 5679
       WAIT_FOR_CLIENT: ${WORKER_WAIT_FOR_CLIENT:-}
     networks:
       - functionary-network
@@ -99,13 +105,24 @@ services:
   build-worker:
     build:
       context: ../functionary
-      dockerfile: ../docker/debug.Dockerfile
-    image: functionary_django
+      dockerfile: ../docker/functionary_podman.Dockerfile
+      args:
+        uid: 1000
+    image: functionary_podman_django
     container_name: functionary-build-worker
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - "/dev/fuse:/dev/fuse"
+    security_opt:
+      - label:disable
+      - seccomp:unconfined
+      - apparmor:unconfined
     environment:
       <<: *environment
-      DEBUG_PORT: 5680
-      DEBUG_CMD: "./manage.py run_build_worker"
+      APP: BUILD_WORKER
+      APP_PORT: 5680
+      DOCKER_HOST: unix:///home/functionary/podman.sock
       WAIT_FOR_CLIENT: ${BUILD_WORKER_WAIT_FOR_CLIENT:-}
     networks:
       - functionary-network
@@ -113,20 +130,23 @@ services:
       - 5680:5680
     volumes:
       - ../functionary:/app
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ../docker/registries.conf:/home/functionary/.config/containers/registries.conf:ro
+      - podman:/var/lib/containers
     depends_on:
       - rabbitmq
       - redis
   runner-listener:
     build:
       context: ../runner
-      dockerfile: ../docker/debug.Dockerfile
-    image: functionary_runner
+      dockerfile: ../docker/functionary_rootless.Dockerfile
+      args:
+        uid: 1000
+    image: functionary_listener
     container_name: functionary-runner-listener
     environment:
       <<: *environment
-      DEBUG_PORT: 5681
-      DEBUG_CMD: "./listener.py"
+      APP: LISTENER
+      APP_PORT: 5681
       WAIT_FOR_CLIENT: ${RUNNER_LISTENER_WAIT_FOR_CLIENT:-}
     networks:
       - functionary-network
@@ -140,13 +160,13 @@ services:
   runner-worker:
     build:
       context: ../runner
-      dockerfile: ../docker/debug.Dockerfile
+      dockerfile: ../docker/functionary_rootful.Dockerfile
     image: functionary_runner
     container_name: functionary-runner-worker
     environment:
       <<: *environment
-      DEBUG_PORT: 5682
-      DEBUG_CMD: "./worker.py"
+      APP: WORKER
+      APP_PORT: 5682
       WAIT_FOR_CLIENT: ${RUNNER_WORKER_WAIT_FOR_CLIENT:-}
     networks:
       - functionary-network
@@ -204,4 +224,5 @@ volumes:
   rabbitmq-data:
   redis-data:
   registry-data:
+  podman:
   postgresql-data:

@@ -1,5 +1,9 @@
+import logging
+
 from runner.celery import app
 from runner.messaging import wait_for_connection
+
+logging.getLogger("pika").propagate = False
 
 # TODO: Make various things configurable. Concurrency, etc.
 if __name__ == "__main__":

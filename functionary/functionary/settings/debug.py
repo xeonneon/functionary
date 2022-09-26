@@ -6,6 +6,8 @@ DEBUG = True
 
 INSTALLED_APPS += ["debug_toolbar"]
 
+REGISTRY = "registry:5000"
+
 # Note: Order of MIDDLEWARE content matters
 MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]
 
