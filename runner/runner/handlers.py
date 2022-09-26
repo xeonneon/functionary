@@ -49,7 +49,8 @@ def _run_task(task):
     logging.info("Running %s from package %s", function, package)
     docker_client = docker.from_env()
     container = docker_client.containers.run(
-        package, auto_remove=False, detach=True, command=run_command
+        package, network_mode="host", auto_remove=False, 
+        detach=True, command=run_command
     )
 
     exit_status = container.wait()["StatusCode"]

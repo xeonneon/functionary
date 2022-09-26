@@ -8,10 +8,10 @@ dirs=`ls -1d */ | sed 's/\///'`
 
 for dir in ${dirs[@]}; do
     pushd $dir > /dev/null
-    docker build -t ${registry}/templates/${dir}:latest .
+    podman build -t ${registry}/templates/${dir}:v1.0.0 .
     popd > /dev/null
 
     if [ "${push}" = "-p" ]; then
-        docker push ${registry}/templates/${dir}:latest
+        podman push ${registry}/templates/${dir}:v1.0.0
     fi
 done

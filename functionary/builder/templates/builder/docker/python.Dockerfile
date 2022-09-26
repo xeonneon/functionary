@@ -1,4 +1,4 @@
-from {{ registry }}/templates/python:latest
+from {{ registry }}/templates/python:v1.0.0
 
 ARG install_dir=/usr/src/app
 COPY . $install_dir/

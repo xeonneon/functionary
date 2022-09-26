@@ -7,6 +7,7 @@ from runner.messaging import wait_for_connection
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 logging.basicConfig(level=LOG_LEVEL)
+logging.getLogger("pika").propagate = False
 
 
 if __name__ == "__main__":

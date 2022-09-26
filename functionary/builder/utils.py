@@ -138,7 +138,6 @@ def build_package(build_id: UUID):
     docker_client.images.push(full_image_name)
 
     logger.debug(f"Cleaning up remnants of build {build_id}")
-    docker_client.images.remove(image.id)
     shutil.rmtree(workdir)
 
     with transaction.atomic():
