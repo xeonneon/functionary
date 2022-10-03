@@ -4,6 +4,7 @@ x-environment:
   &environment
   DEBUG: TRUE
   DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-supersecret}
+  DJANGO_SETTINGS_MODULE: functionary.settings.debug
   LOG_LEVEL: DEBUG
   RABBITMQ_USER: ${RABBITMQ_USER:-bugs}
   RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-wascallywabbit}

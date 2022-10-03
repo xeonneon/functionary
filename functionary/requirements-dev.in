@@ -9,3 +9,6 @@ isort
 
 # Django formatting
 djlint
+
+# Django debugging
+django-debug-toolbar
