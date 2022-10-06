@@ -2,6 +2,49 @@ from rich.console import Console
 from rich.table import Table
 
 
+def flatten(results, object_fields):
+    """Flattens any nested objects in results.
+
+    The keys from each dict in results is checked for a replacement
+    in object_fields. If found in object_fields, the original value
+    will be replaced by new entries for each mapping specified.
+
+    Args:
+        results: List of dict objects to process
+        object_fields: mapping of keys from a nested object in each
+            result item that should be in used instead of the object.
+            For example:
+                object_fields={
+                    "package": [("name", "package")],
+                    "user": [("first_name", "first"), ("last_name", "last")],
+                }
+            will return:
+                [ ...,
+                  "package": <package.name>,
+                  "first": <user.first_name>,
+                  "last": <user.last_name>,
+                  ...
+                ]
+
+    Returns:
+        The input list with the replacements from object_fields included
+    """
+    new_results = []
+
+    for item in results:
+        new_item = {}
+        for key, value in item.items():
+            if key in object_fields:
+                replacements = object_fields[key]
+                for nested_key, label in replacements:
+                    new_item[label] = value[nested_key] if value else None
+            else:
+                new_item[key] = value
+        new_results.append(new_item)
+
+    return new_results
+
+
 def format_results(results, title="", excluded_fields=[]):
     """
     Helper function to organize table results using Rich
@@ -9,6 +52,7 @@ def format_results(results, title="", excluded_fields=[]):
     Args:
         results: Results to format as a List
         title: Optional table title as a String
+        excluded_fields: Optional list of keys to filter out
 
     Returns:
         None

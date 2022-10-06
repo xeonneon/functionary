@@ -9,7 +9,7 @@ from rich.text import Text
 
 from .client import get, post
 from .config import get_config_value
-from .utils import format_results
+from .utils import flatten, format_results
 
 
 def create_languages() -> list[str]:
@@ -119,17 +119,29 @@ def publish(ctx, path):
 
 @package_cmd.command()
 @click.pass_context
-@click.option("--id", help="check the status of a specific build with given id")
+@click.option("--id", help="check the status of a specific build with a given id")
 def buildstatus(ctx, id):
     """
-    View status for all builds, or build with specific id
+    View status for all builds, or the build with a specific id
     """
+    title = "Build Status"
     if id:
-        results = get(f"builds/{id}")
-        format_results([results], title=f"Build: {id}", excluded_fields=["environment"])
+        results = [get(f"builds/{id}")]
+        title = f"Build: {id}"
     else:
         results = get("builds")
-        format_results(results, title="Build Status", excluded_fields=["environment"])
+
+    format_results(
+        flatten(
+            results,
+            object_fields={
+                "package": [("name", "package"), ("id", "Package ID")],
+                "creator": [("username", "creator")],
+            },
+        ),
+        title=title,
+        excluded_fields=["environment"],
+    )
 
 
 @package_cmd.command()

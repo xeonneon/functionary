@@ -5,9 +5,10 @@ from django.conf import settings
 from django.db import models
 
 from core.models import Environment, Package
+from core.models.mixins import ModelSaveHookMixin
 
 
-class Build(models.Model):
+class Build(ModelSaveHookMixin, models.Model):
     """Tracks the package build status and history
 
     Attributes:
@@ -55,6 +56,10 @@ class Build(models.Model):
     def __str__(self):
         return f"{self.id}"
 
+    def post_save(self):
+        if self.status in [Build.COMPLETE, Build.ERROR]:
+            self.resources.delete()
+
 
 class BuildResource(models.Model):
     """Houses resources needed to perform a package build
@@ -72,3 +77,15 @@ class BuildResource(models.Model):
     build = models.OneToOneField(
         to=Build, on_delete=models.CASCADE, related_name="resources"
     )
+
+    @property
+    def image_details(self):
+        # This isn't a version independent way of accessing the definition,
+        # but I don't see name or language moving out of the top level unless
+        # we were to support multiple languages in a single package.
+        name = self.package_definition["name"]
+        language = self.package_definition["language"]
+        dockerfile = f"builder/docker/{language}.Dockerfile"
+        image_name = f"{self.build.environment.id}/{name}:{self.build.id}"
+
+        return (image_name, dockerfile)
