@@ -23,7 +23,10 @@
       "**/Thumbs.db": true,
       "**/*.egg-info": true,
       "**/*.pyc": true,
-      "**/__pycache__": true
+      "**/__pycache__": true,
+      "**/.pytest_cache": true,
+      "**/.coverage": true,
+      "**/*.sqlite3": true
     },
     "editor.formatOnSave": true,
     "markdownlint.config": {
@@ -31,6 +34,7 @@
     },
     "prettier.proseWrap": "always",
     "python.analysis.autoImportCompletions": false,
+    "python.testing.pytestEnabled": true,
     "[django-html]": {
       "editor.defaultFormatter": "monosans.djlint"
     },

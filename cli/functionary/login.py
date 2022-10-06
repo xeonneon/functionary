@@ -8,8 +8,7 @@ from .tokens import login
 @click.option("--user", "-u", prompt=True)
 @click.password_option(confirmation_prompt=False)
 @click.argument("host", type=str)
-@click.pass_context
-def login_cmd(ctx, user, password, host):
+def login_cmd(user, password, host):
     """
     Login to Functionary.
 

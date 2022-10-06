@@ -3,6 +3,9 @@ from pathlib import Path
 import click
 from dotenv import get_key, set_key
 
+functionary_dir = Path.home() / ".functionary"
+config_file = functionary_dir / "config"
+
 
 def save_config_value(key, value):
     """
@@ -20,11 +23,9 @@ def save_config_value(key, value):
         ClickException: Received a PermissionError when opening config file
     """
     try:
-        functionary_dir = Path.home() / ".functionary"
         if not functionary_dir.exists():
             functionary_dir.mkdir()
 
-        config_file = functionary_dir / "config"
         set_key(
             config_file,
             key,
@@ -49,7 +50,6 @@ def get_config_value(key, raise_exception=False):
         parameter matching the provided key exists
     """
     try:
-        config_file = Path.home() / ".functionary" / "config"
         value = get_key(config_file, key)
         if value is None:
             if raise_exception is False:

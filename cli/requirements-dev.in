@@ -6,11 +6,5 @@ black
 coverage
 flake8
 isort
-pytest-django
+pyfakefs
 pytest-mock
-
-# Django formatting
-djlint
-
-# Django debugging
-django-debug-toolbar

@@ -34,7 +34,6 @@ jobs:
           linters: flake8
           run: flake8
 
-
   isort:
     runs-on: ubuntu-latest
     strategy:
