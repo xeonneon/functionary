@@ -26,7 +26,6 @@ handlers = {
 }
 
 
-# Celery Logging Config
 CELERY_LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -35,24 +34,21 @@ CELERY_LOGGING = {
     "loggers": {
         "celery": {"handlers": ["console"], "propagate": False},
         "docker": {"propagate": False},
-        "kombu": {"handlers": ["console"], "propagate": False},
+        "kombu": {"propagate": False},
         "urllib3": {"propagate": False},
     },
 }
 
-
-# Django Logging Config
-LOGGING = {
+LISTENER_LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": formatters,
     "handlers": handlers,
     "loggers": {
         "amqp": {"propagate": False},
-        "core": {"handlers": ["console"], "propagate": False},
-        "django": {"handlers": ["console"], "propagate": False},
         "docker": {"propagate": False},
         "pika": {"propagate": False},
+        "runner": {"handlers": ["console"], "propagate": False},
         "urllib3": {"propagate": False},
     },
 }

@@ -49,7 +49,7 @@ def _run_task(task):
     variables = task.get("variables")
     run_command = ["--function", function, "--parameters", parameters]
 
-    logging.info("Running %s from package %s", function, package)
+    logger.info("Running %s from package %s", function, package)
     docker_client = docker.from_env()
     try:
         container = docker_client.containers.run(

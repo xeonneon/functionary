@@ -128,9 +128,9 @@ def run_scheduled_task(scheduled_task_id: str) -> None:
 def _update_task_status(task: Task, status: int) -> None:
     match status:
         case 0:
-            task.status = "COMPLETE"
+            task.status = Task.COMPLETE
         case _:
-            task.status = "ERROR"
+            task.status = Task.ERROR
 
     task.save()
 

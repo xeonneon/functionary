@@ -1,12 +1,11 @@
 import logging
+import sys
 from os import getenv
 
 from runner import Listener, Worker
 
 LOG_LEVEL = getenv("LOG_LEVEL", "INFO")
-logging.basicConfig(level=LOG_LEVEL)
-logging.getLogger("pika").propagate = False
-logging.getLogger("amqp").propagate = False
+logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL)
 
 
 def spawn_listener() -> Listener:
