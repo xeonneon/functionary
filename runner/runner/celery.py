@@ -11,8 +11,9 @@ from logging.config import dictConfig
 from celery import Celery
 from celery.signals import setup_logging
 
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+BROKER_WORKDIR = os.getenv("BROKER_WORKDIR", "/tmp")
+BROKER_WORKDIR_PATH = os.path.join(BROKER_WORKDIR, "broker")
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -38,10 +39,24 @@ LOGGING = {
     },
 }
 
+
 app = Celery(
     "runner",
-    broker=f"redis://{REDIS_HOST}:{REDIS_PORT}",
     include=["runner.handlers"],
+)
+
+app.conf.update(
+    {
+        "broker_url": "filesystem://",
+        "broker_transport_options": {
+            "data_folder_in": BROKER_WORKDIR_PATH,
+            "data_folder_out": BROKER_WORKDIR_PATH,
+        },
+        "result_persistent": False,
+        "task_serializer": "json",
+        "result_serializer": "json",
+        "accept_content": ["json"],
+    }
 )
 
 
