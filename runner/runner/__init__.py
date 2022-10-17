@@ -1,8 +1,11 @@
+from logging import getLevelName
 from multiprocessing import Process
+from os import getenv
 
+from celery.apps.worker import Worker as CeleryWorker
 from setproctitle import setproctitle
 
-from runner.celery import app
+from runner.celery import WORKER_CONCURRENCY, WORKER_HOSTNAME, app
 from runner.listener import start_listening
 from runner.messaging import wait_for_connection
 
@@ -21,6 +24,7 @@ class Worker(Process):
     def __init__(self, name: str = "functionary: runner worker") -> None:
         super().__init__(name=name)
         self.app = app
+        self.loglevel = getLevelName(getenv("LOG_LEVEL", "INFO").upper())
 
     def run(self) -> None:
         """Runs the Worker process
@@ -47,7 +51,8 @@ class Worker(Process):
         setproctitle(self.name)
 
         wait_for_connection()
-        worker = self.app.Worker()
+        worker = CeleryWorker(app=self.app, hostname=WORKER_HOSTNAME)
+        worker.setup_defaults(concurrency=WORKER_CONCURRENCY, loglevel=self.loglevel)
         worker.start()
 
 

@@ -5,14 +5,26 @@ to retrieve its internal queue of work to perform.
 
 """
 
-import os
+from logging import getLevelName
 from logging.config import dictConfig
+from multiprocessing import cpu_count
+from os import getenv
 
 from celery import Celery
+from celery.apps.worker import Worker
 from celery.signals import setup_logging
 
-BROKER_WORKDIR = os.getenv("BROKER_WORKDIR", "/tmp")
-BROKER_WORKDIR_PATH = os.path.join(BROKER_WORKDIR, "broker")
+RABBITMQ_HOST = getenv("RABBITMQ_HOST", "localhost")
+RABBITMQ_PORT = getenv("RABBITMQ_PORT", 5672)
+RABBITMQ_USER = getenv("RABBITMQ_USER")
+RABBITMQ_PASSWORD = getenv("RABBITMQ_PASSWORD")
+RABBITMQ_VHOST = getenv("RUNNER_DEFAULT_VHOST", "public")
+
+WORKER_CONCURRENCY = cpu_count()
+WORKER_HOSTNAME = "worker"
+WORKER_NAME = f"celery@{WORKER_HOSTNAME}"
+
+LOG_LEVEL = getenv("LOG_LEVEL", "INFO").upper()
 
 LOGGING = {
     "version": 1,
@@ -22,7 +34,7 @@ LOGGING = {
     },
     "handlers": {
         "console": {
-            "level": os.getenv("LOG_LEVEL", "INFO").upper(),
+            "level": LOG_LEVEL,
             "class": "logging.StreamHandler",
             "formatter": "simple",
         },
@@ -43,20 +55,10 @@ LOGGING = {
 app = Celery(
     "runner",
     include=["runner.handlers"],
-)
-
-app.conf.update(
-    {
-        "broker_url": "filesystem://",
-        "broker_transport_options": {
-            "data_folder_in": BROKER_WORKDIR_PATH,
-            "data_folder_out": BROKER_WORKDIR_PATH,
-        },
-        "result_persistent": False,
-        "task_serializer": "json",
-        "result_serializer": "json",
-        "accept_content": ["json"],
-    }
+    broker=(
+        f"amqp://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}"
+        f"@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VHOST}"
+    ),
 )
 
 
@@ -66,4 +68,8 @@ def config_loggers(*args, **kwargs):
 
 
 if __name__ == "__main__":
-    app.start()
+    worker = Worker(app=app, hostname=WORKER_HOSTNAME)
+    worker.setup_defaults(
+        concurrency=WORKER_CONCURRENCY, loglevel=getLevelName(LOG_LEVEL)
+    )
+    worker.start()

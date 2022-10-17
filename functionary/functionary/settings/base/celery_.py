@@ -1,6 +1,11 @@
 """Celery related settings"""
-import os
+from os import getenv
 
-REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
-REDIS_PORT = os.environ.get("REDIS_PORT", "6379")
-CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
+RABBITMQ_HOST = getenv("RABBITMQ_HOST", "localhost")
+RABBITMQ_PORT = getenv("RABBITMQ_PORT", 5672)
+RABBITMQ_USER = getenv("RABBITMQ_USER", "user")
+RABBITMQ_PASSWORD = getenv("RABBITMQ_PASSWORD", "password")
+RABBITMQ_VHOST = getenv("RABBITMQ_FUNCTIONARY_VHOST", "functionary")
+CELERY_BROKER_URL = (
+    f"amqp://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@{RABBITMQ_HOST}:{RABBITMQ_PORT}"
+)

@@ -8,6 +8,11 @@
       "type": "shell",
       "command": "docker stop functionary-runner",
       "hide": true
+    },
+    {
+      "label": "Create default runner vhost",
+      "type": "shell",
+      "command": "docker exec functionary-runner ./run.sh vhost"
     }
   ]
 }
