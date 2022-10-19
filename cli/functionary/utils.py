@@ -1,3 +1,5 @@
+import datetime
+
 from rich.console import Console
 from rich.table import Table
 
@@ -45,6 +47,19 @@ def flatten(results, object_fields):
     return new_results
 
 
+def _fix_datetime_display(value):
+    """
+    Helper function for format_results to remove milliseconds from datetime
+
+    Args:
+        value: string representing datetime value
+    Returns:
+        value as a string representing datetime value without milliseconds
+    """
+    value = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%f%z")
+    return value.strftime("%Y-%m-%d %H:%M:%S%Z")
+
+
 def format_results(results, title="", excluded_fields=[]):
     """
     Helper function to organize table results using Rich
@@ -68,6 +83,8 @@ def format_results(results, title="", excluded_fields=[]):
                 continue
             if first_row:
                 table.add_column(key.capitalize())
+            if key.endswith("_at"):
+                value = _fix_datetime_display(value)
             row_data.append(str(value) if value else None)
         table.add_row(*row_data)
         first_row = False
