@@ -3,6 +3,7 @@ version: "3.5"
 x-environment:
   &environment
   DEBUG: TRUE
+  BROKER_WORKDIR: /tmp
   DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-supersecret}
   DJANGO_SETTINGS_MODULE: functionary.settings.debug
   LOG_LEVEL: DEBUG
@@ -118,7 +119,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - rabbitmq
-      - redis
   database:
     image: postgres:latest
     container_name: functionary-database
