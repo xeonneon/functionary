@@ -27,6 +27,10 @@ run_listener() {
     python manage.py run_listener
 }
 
+run_scheduler() {
+    python manage.py run_scheduler
+}
+
 run_worker() {
     python manage.py run_worker
 }
@@ -71,6 +75,9 @@ case $mode in
 
     run_listener)
     run_listener;;
+
+    run_scheduler)
+    run_scheduler;;
 
     run_worker)
     run_worker;;

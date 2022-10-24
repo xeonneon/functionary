@@ -55,8 +55,8 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "drf_spectacular",
     "drf_spectacular_sidecar",
+    "django_celery_beat",
     "core",
-    "scheduler",
     "builder",
     "ui",
 ]

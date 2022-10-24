@@ -7,12 +7,13 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
+from django_celery_beat.models import PeriodicTask
 
-from core.models import ModelSaveHookMixin, ScheduledTask
+from core.models import ModelSaveHookMixin
 
 
-class Task(ModelSaveHookMixin, models.Model):
-    """A Task is an individual execution of a function
+class ScheduledTask(ModelSaveHookMixin, models.Model):
+    """A ScheduledTask is the scheduled execution of a task
 
     This model should always be queried with environment as one of the filter
     parameters. The indices are intentionally setup this way as all requests for task
@@ -24,25 +25,28 @@ class Task(ModelSaveHookMixin, models.Model):
         environment: the environment that this task belongs to. All queryset filtering
                      should include an environment.
         parameters: JSON representing the parameters that will be passed to the function
-        status: tasking status
         creator: the user that initiated the task
         created_at: task creation timestamp
         updated_at: task updated timestamp
+        crontab_schedule: The crtontab schedule of the task
     """
 
     PENDING = "PENDING"
-    IN_PROGRESS = "IN_PROGRESS"
-    COMPLETE = "COMPLETE"
+    ACTIVE = "ACTIVE"
+    PAUSED = "PAUSED"
     ERROR = "ERROR"
+    ARCHIVED = "ARCHIVED"
 
     STATUS_CHOICES = [
         (PENDING, "Pending"),
-        (IN_PROGRESS, "In Progress"),
-        (COMPLETE, "Complete"),
+        (ACTIVE, "Active"),
+        (PAUSED, "Paused"),
         (ERROR, "Error"),
+        (ARCHIVED, "Archived"),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=128, blank=False)
     function = models.ForeignKey(to="Function", on_delete=models.CASCADE)
     environment = models.ForeignKey(to="Environment", on_delete=models.CASCADE)
     parameters = models.JSONField(encoder=DjangoJSONEncoder)
@@ -50,26 +54,23 @@ class Task(ModelSaveHookMixin, models.Model):
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    scheduled_task = models.ForeignKey(
-        ScheduledTask, on_delete=models.CASCADE, null=True, blank=True
-    )
+    periodic_task = models.ForeignKey(to=PeriodicTask, null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         indexes = [
             models.Index(
-                fields=["environment", "function"], name="task_environment_function"
+                fields=["environment", "function"], name="s_task_environment_function"
             ),
             models.Index(
-                fields=["environment", "status"], name="task_environment_status"
+                fields=["environment", "creator"], name="s_task_environment_creator"
             ),
             models.Index(
-                fields=["environment", "creator"], name="task_environment_creator"
+                fields=["environment", "created_at"],
+                name="s_task_environment_created_at",
             ),
             models.Index(
-                fields=["environment", "created_at"], name="task_environment_created_at"
-            ),
-            models.Index(
-                fields=["environment", "updated_at"], name="task_environment_updated_at"
+                fields=["environment", "updated_at"],
+                name="s_task_environment_updated_at",
             ),
         ]
 
@@ -99,12 +100,6 @@ class Task(ModelSaveHookMixin, models.Model):
         """Model instance validation and attribute cleanup"""
         self._clean_environment()
         self._clean_parameters()
-
-    def post_create(self):
-        """Post create hooks"""
-        from core.utils.tasking import publish_task
-
-        publish_task.delay(self.id)
 
     @property
     def result(self) -> Optional[str]:

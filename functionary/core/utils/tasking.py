@@ -3,9 +3,11 @@ from uuid import UUID
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
+from django.http import QueryDict
+from django_celery_beat.models import PeriodicTask
 
 from core.celery import app
-from core.models import Task, TaskLog, TaskResult
+from core.models import ScheduledTask, Task, TaskLog, TaskResult
 from core.utils.messaging import get_route, send_message
 
 logger = get_task_logger(__name__)
@@ -71,3 +73,35 @@ def record_task_result(task_result_message: dict) -> None:
     #       as is happening now.
     task.status = "COMPLETE" if status == 0 else "ERROR"
     task.save()
+
+
+@app.task
+def scheduler_test() -> None:
+    logger.info("This is a testing task.")
+    print("Hello from test task!")
+
+
+@app.task
+def run_scheduled_task(scheduled_task_id: UUID=None) -> None:
+    scheduled_task = ScheduledTask.objects.get(id=scheduled_task_id)
+
+    _ = Task.objects.create(
+                environment=scheduled_task.environment,
+                creator=scheduled_task.creator,
+                function=scheduled_task.function,
+                parameters=scheduled_task.parameters,
+                scheduled_task=scheduled_task,
+            )
+
+
+# def create_task(scheduled_task: ScheduledTask) -> UUID:
+#     task = Task.objects.create(
+#                 environment=scheduled_task.env,
+#                 creator=request.user,
+#                 function=scheduled_task.function,
+#                 parameters=form.cleaned_data,
+#             )
+#     return task.id
+
+# def create_celery_beat_schedule(scheduled_task) -> None:
+#     get_or_create

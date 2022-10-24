@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load static %}
+{% load unicorn %}
+{% block content %}
+<div class="block">
+    {% if form %}
+        <form id="scheduled-task-form"
+                method="post"
+                action="{% url 'ui:execute-scheduled-task' %}">
+            {% csrf_token %}
+            {% unicorn 'scheduled_task_form' form=form %}
+        </form>
+    {% endif %}
+</div>
+{% endblock content %}

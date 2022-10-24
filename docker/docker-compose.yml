@@ -61,6 +61,27 @@ services:
     depends_on:
       - rabbitmq
       - redis
+  scheduler:
+    build:
+      context: ../functionary
+      dockerfile: ../docker/dev.Dockerfile
+      args:
+        uid: ${UID:-1000}
+    image: functionary_django
+    container_name: functionary-scheduler
+    command: run_scheduler
+    environment:
+      <<: *environment
+    networks:
+      - functionary-network
+    ports:
+      - 5684:5684
+    volumes:
+      - ../functionary:/app
+    depends_on:
+      - rabbitmq
+      - redis
+      - database
   worker:
     build:
       context: ../functionary

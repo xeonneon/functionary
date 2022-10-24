@@ -6,6 +6,7 @@ from core.models import (
     EnvironmentUserRole,
     Function,
     Package,
+    ScheduledTask,
     Task,
     TaskLog,
     TaskResult,
@@ -20,6 +21,7 @@ admin.site.register(Environment, admin.ModelAdmin)
 admin.site.register(EnvironmentUserRole, admin.ModelAdmin)
 admin.site.register(Function, admin.ModelAdmin)
 admin.site.register(Package, admin.ModelAdmin)
+admin.site.register(ScheduledTask, admin.ModelAdmin)
 admin.site.register(Task, admin.ModelAdmin)
 admin.site.register(TaskLog, admin.ModelAdmin)
 admin.site.register(TaskResult, admin.ModelAdmin)

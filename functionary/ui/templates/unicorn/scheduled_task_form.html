@@ -1,0 +1,155 @@
+<div>
+    <!-- Name row/field -->
+    <div class="box">
+        {{ form.non_field_errors }}
+        <div class="field">
+            <div class="columns is-8">
+                <div class="column is-one-third">
+                    <label for="{{ form.name.id_for_label }}">
+                        <b {% if form.field.name.errors %}class="errors"{% endif %} class="title">{{ form.name.label }}</b> 
+                        <span class="is-small has-text-grey-light">{{ form.name.label_suffix }}</span>
+                        &nbsp;&nbsp;&nbsp;{{ form.name.help_text }}
+                    </label>
+                    <div class="column is-one-half p-0 is-italic subtitle">
+                        <p>Give a descriptive name for your scheduled task.</p>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="control">
+                        {{ form.name }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <hr/>
+    
+        <!-- Function row/field -->
+        <div class="field">
+            <div class="columns">
+                <div class="column is-one-third">
+                    <label for="{{ form.function.id_for_label }}">
+                        <b {% if form.field.function.errors %}class="errors"{% endif %} class="title">{{ form.function.label }}</b> 
+                        <span class="is-small has-text-grey-light">{{ form.function.label_suffix }}</span>
+                        &nbsp;&nbsp;&nbsp;{{ form.function.help_text }}
+                    </label>
+                    <div class="column p-0 is-italic subtitle">
+                        <p>Select which function you want to schedule.</p>
+                    </div>
+                </div>
+                <div class="column is-one-third">
+                    <div class="control">
+                        <select name="function" class="select is-link is-medium is-fullwidth"
+                                required="true" id="id_function"
+                                unicorn:model="selected_function"
+                                unicorn:change="update_displayed_function($event.target.value.trim())"
+                                >
+                            {% for function in available_functions %}
+                            <option value="{{ function }}">{{ function }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <hr/>
+    
+        <!-- Crontab row/field -->
+        <div class="field">
+            <div class="columns">
+                <div class="column is-one-third">
+                    <label>
+                        <b class="title">Crontab Schedule</b> 
+                    </label>
+                    <div class="column p-0 is-italic subtitle">
+                        <p>Setup the Crontab-style schedule.</p>
+                    </div>
+                </div>
+
+                <div class="columns is-multiline">
+                    <div class="column is-one-third">
+                        <div class="box">
+                            <label for="{{ form.scheduled_minute.id_for_label }}">
+                                <span>{{ form.scheduled_minute.label}}</span>
+                            </label>
+                            <div class="control">
+                                {{ form.scheduled_minute }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-one-third">
+                        <div class="box">
+                            <label for="{{ form.scheduled_hour.id_for_label }}">
+                                <span>{{ form.scheduled_hour.label}}</span>
+                            </label>
+                            <div class="control">
+                                {{ form.scheduled_hour }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-one-third">
+                        <div class="box">
+                            <label for="{{ form.scheduled_day_of_week.id_for_label }}">
+                                <span>{{ form.scheduled_day_of_week.label}}</span>
+                            </label>
+                            <div class="control">
+                                {{ form.scheduled_day_of_week }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-one-third">
+                        <div class="box">
+                            <label for="{{ form.scheduled_day_of_month.id_for_label }}">
+                                <span>{{ form.scheduled_day_of_month.label}}</span>
+                            </label>
+                            <div class="control">
+                                {{ form.scheduled_day_of_month }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-one-third">
+                        <div class="box">
+                            <label for="{{ form.scheduled_month_of_year.id_for_label }}">
+                                <span>{{ form.scheduled_month_of_year.label}}</span>
+                            </label>
+                            <div class="control">
+                                {{ form.scheduled_month_of_year }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr/>
+
+        <!-- Load function parameters -->
+        <div class="field">
+            <div class="columns">
+                <div class="column is-one-third">
+                    <label for="{{ form.function.id_for_label }}">
+                        <b {% if form.field.function.errors %}class="errors"{% endif %} class="title">{{ form.parameters.label }}</b> 
+                        <span class="is-small has-text-grey-light">{{ form.function.label_suffix }}</span>
+                        &nbsp;&nbsp;&nbsp;{{ form.function.help_text }}
+                    </label>
+                    <div class="column p-0 is-italic subtitle">
+                        <p>Fill out the parameters for the "{{ selected_function }}" Function.</p>
+                    </div>
+                </div>
+                <div class="column">
+                    {% for parameter in parameters %}
+                    <div class="control">
+                        <label for="{{ parameter.label }}"><b>{{ parameter.label }}: </b><i>{{ parameter.label_suffix }}</i></label>
+                        {{ parameter.widget }}    
+                    </div>
+                    <hr/>
+                    {% endfor %}
+
+                </div>
+            </div>
+        </div>
+    
+        <input class="button is-link" type="submit" value="Execute"/>
+    </div>
+</div>

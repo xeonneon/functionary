@@ -2,12 +2,22 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
 
-from .views import environments, functions, home, packages, tasks, teams
+from .views import environments, functions, home, packages, scheduling, tasks, teams
 
 app_name = "ui"
 
 urlpatterns = [
     path("", home.home, name="home"),
+    path(
+        "create_scheduled_task/",
+        (scheduling.ScheduledTaskFormView.as_view()),
+        name="create-scheduled-task",
+    ),
+    path(
+        "execute_scheduled_task/",
+        (scheduling.execute_scheduled_task),
+        name="execute-scheduled-task",
+    ),
     path(
         "environment_list/",
         (environments.EnvironmentListView.as_view()),
@@ -29,6 +39,11 @@ urlpatterns = [
         name="function-detail",
     ),
     path("function_execute/", (functions.execute), name="function-execute"),
+    path(
+        "scheduled_tasks/",
+        (scheduling.ScheduledTaskListView.as_view()),
+        name="scheduled-tasks",
+    ),
     path(
         "package_list/",
         (packages.PackageListView.as_view()),

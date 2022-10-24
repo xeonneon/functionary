@@ -12,7 +12,7 @@ attrs==22.1.0
     # via
     #   -c requirements.txt
     #   pytest
-black==22.8.0
+black==22.10.0
     # via -r requirements-dev.in
 click==8.1.3
     # via
@@ -23,7 +23,7 @@ colorama==0.4.5
     # via djlint
 coverage==6.5.0
     # via -r requirements-dev.in
-cssbeautifier==1.14.6
+cssbeautifier==1.14.7
     # via djlint
 django==4.1.1
     # via
@@ -31,7 +31,7 @@ django==4.1.1
     #   django-debug-toolbar
 django-debug-toolbar==3.7.0
     # via -r requirements-dev.in
-djlint==1.18.0
+djlint==1.19.2
     # via -r requirements-dev.in
 editorconfig==0.12.3
     # via
@@ -43,13 +43,13 @@ html-tag-names==0.1.2
     # via djlint
 html-void-elements==0.1.0
     # via djlint
-importlib-metadata==4.13.0
+importlib-metadata==5.0.0
     # via djlint
 iniconfig==1.1.1
     # via pytest
 isort==5.10.1
     # via -r requirements-dev.in
-jsbeautifier==1.14.6
+jsbeautifier==1.14.7
     # via
     #   cssbeautifier
     #   djlint
@@ -85,7 +85,7 @@ pytest==7.1.3
     #   pytest-mock
 pytest-django==4.5.2
     # via -r requirements-dev.in
-pytest-mock==3.9.0
+pytest-mock==3.10.0
     # via -r requirements-dev.in
 pyyaml==6.0
     # via
@@ -110,5 +110,5 @@ tomli==2.0.1
     #   pytest
 tqdm==4.64.1
     # via djlint
-zipp==3.8.1
+zipp==3.10.0
     # via importlib-metadata
