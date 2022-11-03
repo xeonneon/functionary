@@ -1,5 +1,6 @@
 import datetime
 import io
+import json
 import logging
 import os
 import shutil
@@ -13,14 +14,14 @@ from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.db import transaction
 from django.template.loader import get_template
-from docker.errors import DockerException
+from docker.errors import APIError, BuildError, DockerException
 from pydantic import Field, Json, create_model
 
 from core.models import Environment, Function, Package, User
 
 from .celery import app
 from .exceptions import InvalidPackage
-from .models import Build, BuildResource
+from .models import Build, BuildLog, BuildResource
 
 logger = get_task_logger(__name__)
 logger.setLevel(getattr(logging, settings.LOG_LEVEL))
@@ -106,18 +107,65 @@ def initiate_build(
     return build
 
 
+def _format_build_results(build_results):
+    """
+    Helper function for build_package to format build results
+    as a more readable string
+
+    Args:
+        build_results: iterator returned from docker build
+    Returns:
+        string representation of build log
+
+    """
+    log = ""
+
+    for line in build_results:
+        line_str = ""
+
+        for value in line.values():
+            line_str += str(value)
+
+        log += line_str
+
+    return log
+
+
+def _format_push_results(push_results):
+    """
+    Helper function for build_package to format push results
+    as a more readable string
+
+    Args:
+        push_results: generator object created from docker push
+    Returns:
+        string representation of the push log
+    """
+    log = ""
+
+    for line in push_results:
+        dict_line = json.loads(line.decode("utf-8"))
+        if status := dict_line.get("status"):
+            if id := dict_line.get("id"):
+                line_str = f"{id}: {status}"
+            else:
+                line_str = status
+
+            log += line_str + "\n"
+
+    return log
+
+
 @app.task
 def build_package(build_id: UUID):
     """Retrieve the resources for Build and use them to build and push the package
-    docker image
+    docker image. Also creates BuildLog with build/push information.
 
     Args:
         build_id: ID of the build being executed
     """
     docker_client = docker.from_env()
 
-    # TODO: Catch exceptions and record failures. Also, what happens to the image we
-    #       pushed? Should it be deleted?
     logger.info(f"Starting build {build_id}")
 
     workdir = f"{settings.BUILDER_WORKDIR_BASE}/{build_id}"
@@ -152,25 +200,35 @@ def build_package(build_id: UUID):
         _extract_package_contents(package_contents, workdir)
         _load_dockerfile_template(dockerfile, workdir)
 
-        image, build_log = docker_client.images.build(
-            path=workdir,
-            pull=True,
-            forcerm=True,
-            tag=full_image_name,
+        image, build_result = docker_client.images.build(
+            path=workdir, pull=True, forcerm=True, tag=full_image_name
         )
-        docker_client.images.push(full_image_name)
-    except Exception:
+        build_log = _format_build_results(build_result)
+        build.status = Build.COMPLETE
+    except (APIError, BuildError) as exc:
+        build_log = (
+            _format_build_results(exc.build_log)
+            if hasattr(exc, "build_log")
+            else str(exc)
+        )
         build.status = Build.ERROR
-        build.save()
-        return
+
+    try:
+        push_result = docker_client.images.push(full_image_name, stream=True)
+        build_log += "\n" + _format_push_results(push_result)
+    except APIError as exc:
+        build_log += "\n" + str(exc)
+        build.status = Build.ERROR
 
     with transaction.atomic():
         # Build has succeeded, save all the things now
-        for func in db_functions:
-            func.save()
-        package.image_name = image_name
-        package.save()
-        build.status = Build.COMPLETE
+        if build.status == Build.COMPLETE:
+            for func in db_functions:
+                func.save()
+            package.image_name = image_name
+            package.save()
+
+        BuildLog.objects.create(build=build, log=build_log)
         build.save()
 
     logger.debug(f"Cleaning up remnants of build {build_id}")
