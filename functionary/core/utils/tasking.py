@@ -14,12 +14,30 @@ logger.setLevel(getattr(logging, settings.LOG_LEVEL))
 
 def _generate_task_message(task: Task) -> dict:
     """Generates tasking message from the provided Task"""
+    variables = {var.name: var.value for var in task.variables}
     return {
         "id": str(task.id),
         "package": task.function.package.full_image_name,
         "function": task.function.name,
         "function_parameters": task.parameters,
+        "variables": variables,
     }
+
+
+def _protect_output(task, output):
+    """Mask the values of the tasks protected variables in the output.
+
+    Does a simple protection for variable values over 4 characters
+    long. This is arbitrary, but the results are easily reversed if
+    its too short.
+    """
+    mask = list(task.variables.filter(protect=True).values_list("value", flat=True))
+    protected_output = output
+    for to_mask in mask:
+        if len(to_mask) > 4:
+            protected_output = protected_output.replace(to_mask, "********")
+
+    return protected_output
 
 
 @app.task(
@@ -38,7 +56,9 @@ def publish_task(task_id: UUID) -> None:
     """
     logger.debug(f"Publishing message for Task: {task_id}")
 
-    task = Task.objects.select_related("function", "function__package").get(id=task_id)
+    task = Task.objects.select_related(
+        "function", "function__package", "environment"
+    ).get(id=task_id)
 
     exchange, routing_key = get_route(task)
     send_message(exchange, routing_key, "TASK_PACKAGE", _generate_task_message(task))
@@ -57,12 +77,12 @@ def record_task_result(task_result_message: dict) -> None:
     result = task_result_message["result"]
 
     try:
-        task = Task.objects.get(id=task_id)
+        task = Task.objects.select_related("function", "environment").get(id=task_id)
     except Task.DoesNotExist:
         logger.error("Unable to record results for task %s: task not found", task_id)
         return
 
-    TaskLog.objects.create(task=task, log=output)
+    TaskLog.objects.create(task=task, log=_protect_output(task, output))
     TaskResult.objects.create(task=task, result=result)
 
     # TODO: This status determination feels like it belongs in the runner. This should
