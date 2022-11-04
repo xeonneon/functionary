@@ -5,7 +5,7 @@ from celery.utils.log import get_task_logger
 from django.conf import settings
 
 from core.celery import app
-from core.models import Task, TaskLog, TaskResult
+from core.models import ScheduledTask, Task, TaskLog, TaskResult
 from core.utils.messaging import get_route, send_message
 
 logger = get_task_logger(__name__)
@@ -89,5 +89,46 @@ def record_task_result(task_result_message: dict) -> None:
     #       be reworked so that there are explicitly known statuses that could come
     #       back from the runner, rather than passing through the command exit status
     #       as is happening now.
-    task.status = "COMPLETE" if status == 0 else "ERROR"
+    _update_task_status(task, status)
+
+
+@app.task
+def run_scheduled_task(scheduled_task_id: str) -> None:
+    """Creates and executes a Task according to a schedule
+
+    Uses the given ScheduledTask object id as a string to fetch the ScheduledTask.
+    The necessary metadata is taken from the ScheduledTask object to construct
+    a new Task. The new Task is then associated with that ScheduledTask. The
+    ScheduledTask metadata is then updated with the newly created Task.
+
+    Args:
+        scheduled_task_id: A string of the ID for the ScheduledTask object
+
+    Returns:
+        None
+    """
+    scheduled_task = ScheduledTask.objects.get(id=scheduled_task_id)
+
+    task = Task.objects.create(
+        environment=scheduled_task.environment,
+        creator=scheduled_task.creator,
+        function=scheduled_task.function,
+        return_type=scheduled_task.function.return_type,
+        parameters=scheduled_task.parameters,
+        scheduled_task=scheduled_task,
+    )
+
+    scheduled_task.update_most_recent_task(task)
+
+
+def _update_task_status(task: Task, status: int) -> None:
+    match status:
+        case 0:
+            task.status = "COMPLETE"
+        case _:
+            task.status = "ERROR"
+
     task.save()
+
+    if task.scheduled_task is not None and status == "ERROR":
+        task.scheduled_task.error()
