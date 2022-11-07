@@ -48,6 +48,7 @@ def execute(request) -> HttpResponse:
     env = Environment.objects.get(id=request.session.get("environment_id"))
     if request.user.has_perm(Permission.TASK_CREATE, env):
         func = Function.objects.get(id=request.POST["function_id"])
+        print(f"Function post request: {request.POST}")
         form = TaskParameterForm(func, request.POST)
 
         if form.is_valid():

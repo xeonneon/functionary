@@ -1,5 +1,6 @@
 import json
 
+from django.db.models.query import QuerySet
 from django.forms import (
     BooleanField,
     CharField,
@@ -9,9 +10,13 @@ from django.forms import (
     Form,
     IntegerField,
     JSONField,
+    ModelForm,
     Textarea,
+    ValidationError,
 )
 from django.forms.widgets import DateInput, DateTimeInput
+
+from core.models import Environment, Function, ScheduledTask
 
 
 class HTMLDateInput(DateInput):
@@ -83,10 +88,14 @@ def _prepare_initial_value(param_type, initial):
     return None
 
 
+def get_available_functions(env: Environment) -> QuerySet[Function]:
+    return Function.objects.filter(package__environment=env)
+
+
 class TaskParameterForm(Form):
     template_name = "forms/task_parameters.html"
 
-    def __init__(self, function, data=None):
+    def __init__(self, function: Function, data=None):
         super().__init__(data)
 
         for param, value in function.schema["properties"].items():
@@ -115,3 +124,60 @@ class TaskParameterForm(Form):
             if param_type != "boolean":
                 field.widget.attrs.update({"class": "input"})
             self.fields[param] = field
+
+
+class ScheduledTaskForm(ModelForm):
+    scheduled_minute = CharField(max_length=60 * 4, label="Minute")
+    scheduled_hour = CharField(max_length=24 * 4, label="Hour")
+    scheduled_day_of_week = CharField(max_length=64, label="Day of Week")
+    scheduled_day_of_month = CharField(max_length=31 * 4, label="Day of Month")
+    scheduled_month_of_year = CharField(max_length=64, label="Month of Year")
+
+    class Meta:
+        model = ScheduledTask
+        fields = ["name", "function", "parameters", "environment"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._setup_field_classes()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        available_functions = get_available_functions(cleaned_data["environment"])
+        if cleaned_data["function"] not in available_functions:
+            raise ValidationError("Unknown function was provided.", code="invalid")
+
+        print(f"Cleaned data: {cleaned_data}")
+        return cleaned_data
+
+    def _setup_field_classes(self):
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({"class": "input"})
+
+        self.fields["name"].widget.attrs.update(
+            {"class": "input is-medium is-fullwidth"}
+        )
+        self.fields["scheduled_minute"].widget.attrs.update(
+            {"unicorn:model": "minute", "unicorn:partial": "id_scheduled_minute"}
+        )
+        self.fields["scheduled_hour"].widget.attrs.update(
+            {"unicorn:model": "hour", "unicorn:partial": "id_scheduled_hour"}
+        )
+        self.fields["scheduled_day_of_week"].widget.attrs.update(
+            {
+                "unicorn:model": "day_of_week",
+                "unicorn:partial": "id_scheduled_day_of_week",
+            }
+        )
+        self.fields["scheduled_day_of_month"].widget.attrs.update(
+            {
+                "unicorn:model": "day_of_month",
+                "unicorn:partial": "id_scheduled_day_of_month",
+            }
+        )
+        self.fields["scheduled_month_of_year"].widget.attrs.update(
+            {
+                "unicorn:model": "month_of_year",
+                "unicorn:partial": "id_scheduled_month_of_year",
+            }
+        )
