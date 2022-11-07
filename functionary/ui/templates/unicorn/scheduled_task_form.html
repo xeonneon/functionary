@@ -141,7 +141,7 @@
                     {% for parameter in parameters %}
                     <div class="control">
                         <label for="{{ parameter.label }}"><b>{{ parameter.label }}: </b><i>{{ parameter.label_suffix }}</i></label>
-                        {{ parameter.widget }}    
+                        {{ parameter.widget|safe }}    
                     </div>
                     <hr/>
                     {% endfor %}

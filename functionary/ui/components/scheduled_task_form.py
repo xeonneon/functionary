@@ -3,7 +3,7 @@ from django.forms import Widget
 from django_unicorn.components import QuerySetType, UnicornView
 
 from core.auth import Permission
-from core.models import Function, Package
+from core.models import Environment, Function, Package
 
 from ..forms.forms import (
     ScheduledTaskForm,
@@ -37,12 +37,20 @@ class ScheduledTaskFormView(UnicornView):
             raise PermissionDenied
 
     def mount(self):
-        self.selected_function = self.get_first_available_function()
-        self.available_functions = self.get_available_functions()
+        # self.selected_function = self.get_first_available_function()
+        # self.available_functions = self.get_available_functions()
         self.parameters = self.get_parameters()
         print(f"Default function: {self.selected_function}")
 
     def update_displayed_function(self, function):
+        print(f"Function changed!: {function}")
+        print(f"New function: {type(function)}")
+        env = self.request.session.get("environment_id")
+        environment = Environment.objects.get(id=env)
+        func = Function.objects.filter(package__environment=environment).get(name=function)
+        print(f"New func: {func} -- {type(func)}")
+        self.selected_function = func
+        self.parameters = self.get_parameters()
         pass
 
     def get_first_available_function(self):
@@ -87,3 +95,4 @@ class ScheduledTaskFormView(UnicornView):
             "form",
             "selected_function",
         )
+        safe = ("parameters",)
