@@ -10,11 +10,13 @@ from .view_base import (
 
 class BuildListView(PermissionedEnvironmentListView):
     model = Build
-    order_by_fields = ["created_at"]
+    order_by_fields = ["-created_at"]
+    queryset = Build.objects.select_related("creator", "package").all()
 
 
 class BuildDetailView(PermissionedEnvironmentDetailView):
     model = Build
+    queryset = Build.objects.select_related("creator", "package").all()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
