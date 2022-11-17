@@ -31,6 +31,10 @@ run_worker() {
     python manage.py run_worker
 }
 
+run_scheduler() {
+    python manage.py run_scheduler
+}
+
 run_build_worker() {
     python manage.py run_build_worker
 }
@@ -74,6 +78,9 @@ case $mode in
 
     run_worker)
     run_worker;;
+
+    run_scheduler)
+    run_scheduler;;
 
     run_build_worker)
     run_build_worker;;
