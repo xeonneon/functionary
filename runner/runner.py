@@ -1,23 +1,12 @@
 import logging
-import os
+from os import getenv
 
 from runner import Listener, Worker
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+LOG_LEVEL = getenv("LOG_LEVEL", "INFO")
 logging.basicConfig(level=LOG_LEVEL)
 logging.getLogger("pika").propagate = False
-
-
-def setup_broker_dir() -> None:
-    broker_workdir = os.getenv("BROKER_WORKDIR", "/tmp")
-    broker_workdir_path = os.path.join(broker_workdir, "broker")
-    try:
-        if not os.path.exists(broker_workdir_path):
-            os.makedirs(os.path.join(broker_workdir_path))
-    except PermissionError:
-        raise PermissionError(
-            f"You do not have permission to create {broker_workdir_path}"
-        )
+logging.getLogger("amqp").propagate = False
 
 
 def spawn_listener() -> Listener:
@@ -35,7 +24,6 @@ def spawn_worker() -> Worker:
 
 
 if __name__ == "__main__":
-    setup_broker_dir()
     listener = spawn_listener()
     worker = spawn_worker()
 

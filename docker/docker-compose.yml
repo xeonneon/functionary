@@ -10,7 +10,7 @@ x-environment:
   RABBITMQ_USER: ${RABBITMQ_USER:-bugs}
   RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-wascallywabbit}
   RABBITMQ_HOST: rabbitmq
-  REDIS_HOST: redis
+  RABBITMQ_PORT: 5672
   DB_ENGINE: POSTGRESQL
   DB_HOST: postgresql
   DB_NAME: functionary
@@ -39,7 +39,6 @@ services:
       - ../functionary:/app
     depends_on:
       - rabbitmq
-      - redis
       - database
   listener:
     build:
@@ -60,7 +59,6 @@ services:
       - ../functionary:/app
     depends_on:
       - rabbitmq
-      - redis
   worker:
     build:
       context: ../functionary
@@ -80,28 +78,6 @@ services:
       - ../functionary:/app
     depends_on:
       - rabbitmq
-      - redis
-  scheduler:
-    build:
-      context: ../functionary
-      dockerfile: ../docker/dev.Dockerfile
-      args:
-        uid: ${UID:-1000}
-    image: functionary_django
-    container_name: functionary-scheduler
-    command: run_scheduler
-    environment:
-      <<: *environment
-    networks:
-      - functionary-network
-    ports:
-      - 5684:5684
-    volumes:
-      - ../functionary:/app
-    depends_on:
-      - rabbitmq
-      - redis
-      - database
   build-worker:
     build:
       context: ../functionary
@@ -120,7 +96,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - rabbitmq
-      - redis
   runner:
     build:
       context: ../runner
@@ -129,8 +104,11 @@ services:
         uid: ${UID:-1000}
     image: functionary_runner
     container_name: functionary-runner
+    command: start
     environment:
       <<: *environment
+      RABBITMQ_HTTP_PORT: 15672
+      RUNNER_DEFAULT_VHOST: public
     networks:
       - functionary-network
     ports:
@@ -171,16 +149,6 @@ services:
       - 15672:15672
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
-  redis:
-    image: redis:latest
-    container_name: functionary-redis
-    hostname: redis
-    networks:
-      - functionary-network
-    ports:
-      - 6379:6379
-    volumes:
-      - redis-data:/data
   registry:
     image: registry:2
     container_name: functionary-registry
@@ -199,6 +167,5 @@ networks:
 
 volumes:
   rabbitmq-data:
-  redis-data:
   registry-data:
   postgresql-data:

@@ -17,6 +17,10 @@ load_fixture() {
 init() {
     migrate
     load_fixture
+
+    # Temporary manual creation of runner vhost. Remove once runner registration
+    # is implemented
+    python manage.py shell -c "from core.utils.rabbitmq import create_vhost; create_vhost('public')"
 }
 
 runserver() {

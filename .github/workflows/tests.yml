@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        component: [cli, functionary]
+        component: [cli, functionary, runner]
     name: ${{ matrix.component }}
     steps:
       - uses: actions/checkout@v3
