@@ -7,7 +7,7 @@ from django.views.decorators.http import require_POST
 from core.auth import Permission
 from core.models import Environment, Function, Task
 
-from ..forms.forms import TaskParameterForm
+from ..forms.tasks import TaskParameterForm
 from .view_base import (
     PermissionedEnvironmentDetailView,
     PermissionedEnvironmentListView,
@@ -26,12 +26,26 @@ class FunctionDetailView(PermissionedEnvironmentDetailView):
     environment_through_field = "package"
 
     def get_queryset(self):
-        return super().get_queryset().select_related("package", "package__environment")
+        return (
+            super()
+            .get_queryset()
+            .select_related(
+                "package", "package__environment", "package__environment__team"
+            )
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        function = self.get_object()
+        function = self.object
         env = function.package.environment
+
+        missing_variables = []
+        if function.variables:
+            all_vars = list(env.variables.values_list("name", flat=True))
+            missing_variables = [
+                var for var in function.variables if var not in all_vars
+            ]
+        context["missing_variables"] = missing_variables
         if self.request.user.has_perm(Permission.TASK_CREATE, env):
             form = TaskParameterForm(function)
 

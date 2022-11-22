@@ -27,11 +27,15 @@
 .errors {
     color: red;
 }
-textarea.input {
-    height: 100px;
-}
 .wrap-json {
     display: block;
     white-space: pre;
     margin: 0px;
 }
+.missing-variables > ul {
+    list-style: inside;
+}
+tr.htmx-swapping td {
+    opacity: 0;
+    transition: opacity 1s ease-out;
+  }
