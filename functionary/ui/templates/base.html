@@ -35,6 +35,7 @@
         <script src="{% static 'js/pretty-print-json-1.2.min.js' %}"></script>
         <!-- This script will run when the page loads and the menus are available -->
         <script src="{% static 'js/highlight-menu-item.js' %}" defer></script>
+        <script src="{% static 'js/htmx-1.8.4.min.js' %}"></script>
         {% unicorn_scripts %}
     </head>
     <body>
@@ -103,6 +104,12 @@
                             <a href="{% url 'ui:function-list' %}">
                                 <span class="icon has-text-info"><i class="fa fa-lg fa-cube"></i></span>
                                 &nbsp;Functions
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{% url 'ui:schedule-list' %}">
+                                <span class="icon has-text-info"><i class="fa fa-lg fa-clock"></i></span>
+                                &nbsp;Schedules
                             </a>
                         </li>
                     </ul>
