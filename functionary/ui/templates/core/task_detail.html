@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
     <div id="task_detail"
-         hx-swap-oob="true"
-         {% if not completed %} hx-get="{% url 'ui:task-results' task.id %}?output=display_raw&poll=true" hx-target="#result" hx-trigger="every 5s"{% endif %}>
+         {% if not completed %} hx-get="{% url 'ui:task-results' task.id %}?output=display_raw&poll=true" hx-trigger="every 5s"{% endif %}>
         <div class="block">
             <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
                 <ul>
@@ -49,7 +48,7 @@
                 <label class="label" for="result">
                     <i class="fa fa-clipboard-check"></i>&nbsp;Result:
                 </label>
-                {% include "partials/task_result.html" %}
+                {% include 'partials/task_result_block.html' %}
             </div>
         </div>
     </div>

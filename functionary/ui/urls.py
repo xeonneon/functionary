@@ -85,6 +85,7 @@ urlpatterns = [
         (tasks.TaskDetailView.as_view()),
         name="task-detail",
     ),
+    path("task/<pk>/log", (tasks.get_task_log), name="task-log"),
     path(
         "task/<uuid:pk>/results",
         (tasks.TaskResultsView.as_view()),
