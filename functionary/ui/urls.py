@@ -85,6 +85,11 @@ urlpatterns = [
         (tasks.TaskDetailView.as_view()),
         name="task-detail",
     ),
+    path(
+        "task/<uuid:pk>/results",
+        (tasks.TaskResultsView.as_view()),
+        name="task-results",
+    ),
     path("team_list/", (teams.TeamListView.as_view()), name="team-list"),
     path(
         "team/<uuid:pk>",
@@ -97,8 +102,8 @@ urlpatterns = [
         name="update-schedule",
     ),
     path(
-        "environment/set_environment_id",
-        (environments.set_environment_id),
+        "environment/set_environment",
+        (environments.EnvironmentSelectView.as_view()),
         name="set-environment",
     ),
     path(
