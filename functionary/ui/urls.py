@@ -166,6 +166,9 @@ htmx_urlpatterns = [
         (scheduling.function_parameters),
         name="function-parameters",
     ),
+    path(
+        "search_functions/", (functions.search_for_functions), name="search-functions"
+    ),
 ]
 
 urlpatterns += htmx_urlpatterns

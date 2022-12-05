@@ -1,0 +1,7 @@
+<div class="column is-one-third">
+    <div class="box">
+        <label for="name-search">Name of Function:</label>
+        <br/>
+        <input class="input form-control" type="search" id="name-search" name="search" hx-post="{% url 'ui:search-functions' %}" hx-trigger="keyup changed delay:500ms, search" hx-target="#results"/>
+    </div>
+</div>
