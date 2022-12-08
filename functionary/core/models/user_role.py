@@ -50,6 +50,8 @@ class EnvironmentUserRole(UserRole):
         user: Foreign key to User
         environment: Foreign key to Environment
         role: The user's role on the environment
+        inherited: If the user's access to the environment is inherited
+            from the team that the environment belongs to
     """
 
     environment = models.ForeignKey(
@@ -58,6 +60,7 @@ class EnvironmentUserRole(UserRole):
         on_delete=models.CASCADE,
         related_name="user_roles",
     )
+    inherited = models.BooleanField(default=True)
 
     class Meta:
         constraints = [

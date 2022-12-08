@@ -17,13 +17,23 @@ from .views import (
 
 app_name = "ui"
 
+"""
+URL naming convention:
+
+Sort the url patterns alphabetically.
+
+For action based URLs, use the following verbs:
+    - create
+    - delete
+    - list
+    - detail
+    - update
+
+"""
+
+
 urlpatterns = [
     path("", home.home, name="home"),
-    path(
-        "create_schedule/",
-        (scheduling.create_scheduled_task),
-        name="create-schedule",
-    ),
     path(
         "build_list/",
         (builds.BuildListView.as_view()),
@@ -33,16 +43,6 @@ urlpatterns = [
         "build/<uuid:pk>",
         (builds.BuildDetailView.as_view()),
         name="build-detail",
-    ),
-    path(
-        "environment_list/",
-        (environments.EnvironmentListView.as_view()),
-        name="environment-list",
-    ),
-    path(
-        "environment/<uuid:pk>",
-        (environments.EnvironmentDetailView.as_view()),
-        name="environment-detail",
     ),
     path(
         "function_list/",
@@ -56,11 +56,6 @@ urlpatterns = [
     ),
     path("function_execute/", (functions.execute), name="function-execute"),
     path(
-        "new_schedule/",
-        (scheduling.ScheduledTaskCreateView.as_view()),
-        name="new-schedule",
-    ),
-    path(
         "package_list/",
         (packages.PackageListView.as_view()),
         name="package-list",
@@ -69,16 +64,6 @@ urlpatterns = [
         "package/<uuid:pk>",
         (packages.PackageDetailView.as_view()),
         name="package-detail",
-    ),
-    path(
-        "schedule/<uuid:pk>",
-        (scheduling.ScheduledTaskUpdateView.as_view()),
-        name="schedule-detail",
-    ),
-    path(
-        "schedule_list/",
-        (scheduling.ScheduledTaskListView.as_view()),
-        name="schedule-list",
     ),
     path("task_list/", (tasks.TaskListView.as_view()), name="task-list"),
     path(
@@ -91,22 +76,6 @@ urlpatterns = [
         "task/<uuid:pk>/results",
         (tasks.TaskResultsView.as_view()),
         name="task-results",
-    ),
-    path("team_list/", (teams.TeamListView.as_view()), name="team-list"),
-    path(
-        "team/<uuid:pk>",
-        (teams.TeamDetailView.as_view()),
-        name="team-detail",
-    ),
-    path(
-        "update_schedule/<uuid:pk>",
-        (scheduling.update_scheduled_task),
-        name="update-schedule",
-    ),
-    path(
-        "environment/set_environment",
-        (environments.EnvironmentSelectView.as_view()),
-        name="set-environment",
     ),
     path(
         "variables/<parent_id>",
@@ -166,7 +135,86 @@ htmx_urlpatterns = [
         (scheduling.function_parameters),
         name="function-parameters",
     ),
+    path(
+        "new_schedule/",
+        (scheduling.ScheduledTaskCreateView.as_view()),
+        name="new-schedule",
+    ),
+    path(
+        "update_schedule/<uuid:pk>",
+        (scheduling.update_scheduled_task),
+        name="update-schedule",
+    ),
+    path(
+        "schedule/<uuid:pk>",
+        (scheduling.ScheduledTaskUpdateView.as_view()),
+        name="schedule-detail",
+    ),
+    path(
+        "schedule_list/",
+        (scheduling.ScheduledTaskListView.as_view()),
+        name="schedule-list",
+    ),
 ]
+
+environment_urlpatterns = [
+    path(
+        "environment/<uuid:pk>",
+        (environments.EnvironmentDetailView.as_view()),
+        name="environment-detail",
+    ),
+    path(
+        "environment_list/",
+        (environments.EnvironmentListView.as_view()),
+        name="environment-list",
+    ),
+    path(
+        "environment/set_environment",
+        (environments.EnvironmentSelectView.as_view()),
+        name="set-environment",
+    ),
+    path(
+        "environment/<environment_id>/create",
+        (environments.EnvironmentCreateMemberView.as_view()),
+        name="create-environment-member",
+    ),
+    path(
+        "environment/<environment_id>/delete/<user_id>",
+        (environments.EnvironmentDeleteMemberView.as_view()),
+        name="delete-environment-member",
+    ),
+    path(
+        "environment/<environment_id>/update/<user_id>",
+        (environments.EnvironmentUpdateMemberView.as_view()),
+        name="update-environment-member",
+    ),
+]
+
+team_urlpatterns = [
+    path("team_list/", (teams.TeamListView.as_view()), name="team-list"),
+    path(
+        "team/<uuid:pk>",
+        (teams.TeamDetailView.as_view()),
+        name="team-detail",
+    ),
+    path(
+        "team/<team_id>/create",
+        (teams.TeamCreateMemberView.as_view()),
+        name="create-team-member",
+    ),
+    path(
+        "team/<team_id>/delete/<user_id>",
+        (teams.TeamDeleteMemberView.as_view()),
+        name="delete-team-member",
+    ),
+    path(
+        "team/<team_id>/update/<user_id>",
+        (teams.TeamUpdateMemberView.as_view()),
+        name="update-team-member",
+    ),
+    path("users/", (teams.get_users), name="get-users"),
+]
+
 
 workflows_urlpatterns = [
     path(
@@ -206,4 +254,16 @@ workflows_urlpatterns = [
     ),
 ]
 
+
+"""
+Append App URL patterns to a main urlpatterns list.
+
+URL patterns should be grouped by the django app they represent.
+
+For example, there should be a list for all the URLs related to
+teams, environments, schedules, tasks, etc.
+
+"""
+urlpatterns += environment_urlpatterns
+urlpatterns += team_urlpatterns
 urlpatterns += htmx_urlpatterns + workflows_urlpatterns

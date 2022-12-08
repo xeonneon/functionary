@@ -1,0 +1,21 @@
+<form hx-post="{% url 'ui:create-team-member' team_id %}" method="post">
+    {% csrf_token %}
+    <div class="columns is-multiline">
+        <div class="field column is-half">
+            <label class="{% if form.user.errors %}errors{% endif %} label" for="user">User:</label>
+            <input class="input is-medium" name="user" id="user" list="user-list"
+            hx-get="{% url 'ui:get-users' %}"
+            hx-trigger="keyup changed delay:500ms"
+            hx-swap="outerHTML"
+            hx-target="#user-list"/>
+            {{ form.user.errors }}
+            {% include "partials/teams/user_list.html" with usernames=None %}
+        </div>
+        <div class="field column">
+            <label class="{% if form.role.errors %}errors{% endif %} label" for="id_role">Role:</label>
+            {{ form.role }}
+        </div>
+    </div>
+
+    <button class="button is-link" type="submit" value="Add User">Add User</button>
+</form>

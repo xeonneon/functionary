@@ -27,6 +27,25 @@
                     <i class="fa fa-users"></i>&nbsp;{{ environment.team.name }}
                 </div>
             </div>
+
+            <div class="field">
+                {% if not environment_create_perm %}
+                <label class="label" for="users">
+                    <i class="fa fa-user"></i>&nbsp;Users:
+                </label>
+                <ul id="users">
+                    {% for u in users %}
+                        <li class="block ml-4">
+                            <p>
+                                {{ u.first_name }} {{ u.last_name }} <span class="has-text-grey-light">({{ u.username }})</span>
+                            </p>
+                        </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                    {% include "partials/environments/environment_management.html" %}
+                {% endif %}
+            </div>
             {% include 'partials/variables_section.html' with parent_object=environment parent_id=environment.id %}
             <div class="field">
                 <label class="label" for="packages">

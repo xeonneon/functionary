@@ -81,18 +81,18 @@ _READ_ONLY_PERMISSIONS = [
     permission.value for permission in Permission if ":read" in permission.value
 ]
 
-# Other roles get build on READ_ONLY
-_DEVELOPER_PERMISSIONS = _READ_ONLY_PERMISSIONS + [
-    Permission.PACKAGE_CREATE.value,
-    Permission.PACKAGE_UPDATE.value,
-]
-
-# TODO: Add permissions once Task model exists
+# Operators just handle tasking for a team and environment
 _OPERATOR_PERMISSIONS = _READ_ONLY_PERMISSIONS + [
     Permission.TASK_CREATE.value,
     Permission.WORKFLOW_CREATE.value,
     Permission.WORKFLOW_UPDATE.value,
     Permission.WORKFLOW_DELETE.value,
+]
+
+# Developer role includes Operator roles plus some additional development roles
+_DEVELOPER_PERMISSIONS = _OPERATOR_PERMISSIONS + [
+    Permission.PACKAGE_CREATE.value,
+    Permission.PACKAGE_UPDATE.value,
 ]
 
 ROLE_PERMISSION_MAP = {

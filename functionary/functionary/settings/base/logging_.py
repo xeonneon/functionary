@@ -1,4 +1,12 @@
 from os import getenv
+from sys import warnoptions
+
+# Ignore any module warnings
+if not warnoptions:
+    import warnings
+
+    warnings.simplefilter("ignore")
+
 
 LOG_LEVEL = getenv("LOG_LEVEL", "INFO").upper()
 
@@ -35,6 +43,7 @@ CELERY_LOGGING = {
     "loggers": {
         "celery": {"handlers": ["console"], "propagate": False},
         "docker": {"propagate": False},
+        "fuzz": {"propagate": False},
         "kombu": {"handlers": ["console"], "propagate": False},
         "urllib3": {"propagate": False},
         "celery.beat": {},
@@ -54,6 +63,7 @@ LOGGING = {
         "django": {"handlers": ["console"], "propagate": False},
         "docker": {"propagate": False},
         "pika": {"propagate": False},
+        "fuzz": {"propagate": False},
         "urllib3": {"propagate": False},
     },
 }

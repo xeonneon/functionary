@@ -1,0 +1,15 @@
+<form hx-post="{% url 'ui:update-environment-member' environment_id user_id %}" method="post">
+    {% csrf_token %}
+    <div class="columns is-multiline">
+        <div class="field control column is-half">
+            <label class="label" for="username-field">User:</label>
+            <input id="username-field" class="input is-medium" disabled placeholder="{{ username }}"/>
+        </div>
+        <div class="field column is-half">
+            <label class="{% if form.role.errors %}errors{% endif %} label" for="id_role">Role:</label>
+            {{ form.role }}
+        </div>
+    </div>
+
+    <button class="button is-link" type="submit" value="Add User">Update Role</button>
+</form>
