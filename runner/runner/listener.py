@@ -1,5 +1,6 @@
 from json import loads
 from logging import getLogger
+from logging.config import dictConfig
 from time import sleep
 
 from celery import chain
@@ -9,9 +10,11 @@ from pika.spec import Basic, BasicProperties
 
 from .celery import WORKER_CONCURRENCY, WORKER_NAME, app
 from .handlers import publish_result, pull_image, run_task
+from .logging_configs import LISTENER_LOGGING
 from .messaging import build_connection
 
 logger = getLogger(__name__)
+dictConfig(LISTENER_LOGGING)
 
 WAIT_FOR_AVAILABLE_WORKER_DELAY = 2
 WAIT_FOR_MESSAGE_DELAY = 0.5

@@ -14,6 +14,8 @@ from celery import Celery
 from celery.apps.worker import Worker
 from celery.signals import setup_logging
 
+from .logging_configs import CELERY_LOGGING, LOG_LEVEL
+
 RABBITMQ_HOST = getenv("RABBITMQ_HOST", "localhost")
 RABBITMQ_PORT = getenv("RABBITMQ_PORT", 5672)
 RABBITMQ_USER = getenv("RABBITMQ_USER")
@@ -23,33 +25,6 @@ RABBITMQ_VHOST = getenv("RUNNER_DEFAULT_VHOST", "public")
 WORKER_CONCURRENCY = cpu_count()
 WORKER_HOSTNAME = "worker"
 WORKER_NAME = f"celery@{WORKER_HOSTNAME}"
-
-LOG_LEVEL = getenv("LOG_LEVEL", "INFO").upper()
-
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "simple": {"format": "[{levelname:<8}] {asctime:<24} {message}", "style": "{"},
-    },
-    "handlers": {
-        "console": {
-            "level": LOG_LEVEL,
-            "class": "logging.StreamHandler",
-            "formatter": "simple",
-        },
-    },
-    "loggers": {
-        "celery": {
-            "handlers": ["console"],
-            "propagate": False,
-        },
-        "kombu": {
-            "handlers": ["console"],
-            "propagate": False,
-        },
-    },
-}
 
 
 app = Celery(
@@ -64,7 +39,7 @@ app = Celery(
 
 @setup_logging.connect
 def config_loggers(*args, **kwargs):
-    dictConfig(LOGGING)
+    dictConfig(CELERY_LOGGING)
 
 
 if __name__ == "__main__":
