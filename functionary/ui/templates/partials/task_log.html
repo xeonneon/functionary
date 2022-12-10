@@ -1,0 +1,7 @@
+<div>
+    {% if task.log == "" %}
+        <p>This task does not have any logs to display.</p>
+    {% else %}
+        <pre class="mr-4">{{ task.log }}</pre>
+    {% endif %}
+</div>

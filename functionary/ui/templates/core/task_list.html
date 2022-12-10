@@ -1,33 +1,11 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-    <div>
-        {% for task in object_list %}
-            <div class="block">
-                <div class="card">
-                    <div class="card-content">
-                        <div class="media">
-                            <div class="media-left">
-                                <span class="icon is-large">
-                                    <i class="fa fa-2x fa-digital-tachograph"></i>
-                                </span>
-                            </div>
-                            <div class="media-content">
-                                <a href="{% url 'ui:task-detail' task.id %}">
-                                    <p class="title is-4">
-                                        {{ task.function.name }}
-                                        &nbsp;&nbsp;
-                                    </p>
-                                </a>
-                                <p class="subtitle is-6">
-                                    <span><i class="fa fa-user"></i>&nbsp;{{ task.creator.username }}</span>
-                                    <br/>
-                                    <span class="is-size-6 has-text-weight-normal">(Created at {{ task.created_at }})</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
+{% for task in page_obj %}
+    <div class="mb-2">
+        {% include 'partials/task_element.html' with task=task %}
     </div>
-{% endblock content %}
+{% endfor %}
+
+{% include 'partials/pagination_navbar.html' with page_obj=page_obj paginator=paginator %}
+{% endblock %}

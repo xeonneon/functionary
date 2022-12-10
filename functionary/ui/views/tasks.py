@@ -1,10 +1,19 @@
 import csv
 
-from django.core.exceptions import BadRequest
-from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import BadRequest, ValidationError
+from django.http import (
+    HttpRequest,
+    HttpResponse,
+    HttpResponseForbidden,
+    HttpResponseNotFound,
+)
+from django.shortcuts import get_object_or_404, render
+from django.views.decorators.http import require_GET
 from django_htmx import http
 
-from core.models import Task
+from core.auth import Permission
+from core.models import Environment, Task
 
 from .view_base import (
     PermissionedEnvironmentDetailView,
@@ -12,6 +21,7 @@ from .view_base import (
 )
 
 FINISHED_STATUS = ["COMPLETE", "ERROR"]
+PAGINATION_AMOUNT = 8
 
 
 def _detect_csv(result):
@@ -132,6 +142,7 @@ class TaskListView(PermissionedEnvironmentListView):
     model = Task
     order_by_fields = ["-created_at"]
     queryset = Task.objects.select_related("environment", "function", "creator").all()
+    paginate_by = PAGINATION_AMOUNT
 
 
 class TaskDetailView(PermissionedEnvironmentDetailView):
@@ -187,4 +198,31 @@ class TaskResultsView(PermissionedEnvironmentDetailView):
                 "#task_detail",
             )
 
-        return render(request, "partials/task_result.html", context=context)
+        return render(request, "partials/task_result_block.html", context=context)
+
+
+@require_GET
+@login_required
+def get_task_log(request: HttpRequest, pk: str) -> HttpResponse:
+    env = Environment.objects.get(id=request.session.get("environment_id"))
+    if not request.user.has_perm(Permission.TASK_READ, env):
+        return HttpResponseForbidden()
+
+    try:
+        # Use try/except in case of invalid task_id uuid format
+        task = get_object_or_404(Task, id=pk, environment=env)
+    except ValidationError:
+        return HttpResponseNotFound("Unknown task submitted.")
+
+    completed = task.status in FINISHED_STATUS
+    show_output_selector = (
+        False if not completed else _show_output_selector(task.result)
+    )
+
+    context = {
+        "task": task,
+        "completed": completed,
+        "show_output_selector": show_output_selector,
+        "output_format": "log",
+    }
+    return render(request, "partials/task_result_block.html", context)
