@@ -13,7 +13,7 @@ from django.views.decorators.http import require_GET
 from django_htmx import http
 
 from core.auth import Permission
-from core.models import Environment, Task, TaskLog
+from core.models import Environment, Task
 
 from .view_base import (
     PermissionedEnvironmentDetailView,
@@ -208,7 +208,6 @@ def get_task_log(request: HttpRequest, pk: str) -> HttpResponse:
     if not request.user.has_perm(Permission.TASK_READ, env):
         return HttpResponseForbidden()
 
-    task = None
     try:
         # Use try/except in case of invalid task_id uuid format
         task = get_object_or_404(Task, id=pk, environment=env)
@@ -216,7 +215,6 @@ def get_task_log(request: HttpRequest, pk: str) -> HttpResponse:
         return HttpResponseNotFound("Unknown task submitted.")
 
     completed = task.status in FINISHED_STATUS
-    task_log = TaskLog.objects.get(task=task)
     show_output_selector = (
         False if not completed else _show_output_selector(task.result)
     )
@@ -225,7 +223,6 @@ def get_task_log(request: HttpRequest, pk: str) -> HttpResponse:
         "task": task,
         "completed": completed,
         "show_output_selector": show_output_selector,
-        "task_log": task_log.log,
         "output_format": "log",
     }
     return render(request, "partials/task_result_block.html", context)
