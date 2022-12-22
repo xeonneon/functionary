@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import View
 
 from core.auth import Permission
-from core.models import Environment, EnvironmentUserRole, Team, TeamUserRole, User
+from core.models import Team, TeamUserRole, User
 
 
 class TeamDeleteMemberView(LoginRequiredMixin, UserPassesTestMixin, View):

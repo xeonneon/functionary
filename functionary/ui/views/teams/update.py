@@ -4,8 +4,8 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.generic import View
 
-from core.auth import ROLE_HEIRARCHY_MAP, Permission
-from core.models import Environment, EnvironmentUserRole, Team, TeamUserRole, User
+from core.auth import Permission
+from core.models import Team, TeamUserRole, User
 from ui.forms.teams import TeamUserRoleForm
 
 

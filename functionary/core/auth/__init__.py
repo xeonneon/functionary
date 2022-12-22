@@ -78,7 +78,7 @@ class RoleHeirarchy(IntEnum):
 
     READ_ONLY = auto()
     OPERATOR = auto()
-    DEVELOPER = auto() 
+    DEVELOPER = auto()
     ADMIN = auto()
 
 
@@ -116,5 +116,5 @@ ROLE_HEIRARCHY_MAP = {
     Role.READ_ONLY.name: RoleHeirarchy.READ_ONLY,
     Role.OPERATOR.name: RoleHeirarchy.OPERATOR,
     Role.DEVELOPER.name: RoleHeirarchy.DEVELOPER,
-    Role.ADMIN.name: RoleHeirarchy.ADMIN
+    Role.ADMIN.name: RoleHeirarchy.ADMIN,
 }

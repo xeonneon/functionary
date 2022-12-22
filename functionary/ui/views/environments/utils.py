@@ -1,7 +1,5 @@
 from typing import Union
 
-from django.db.models import QuerySet
-
 from core.auth import ROLE_HEIRARCHY_MAP, Role
 from core.models import Environment, EnvironmentUserRole, Team, TeamUserRole, User
 

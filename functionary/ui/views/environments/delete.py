@@ -1,5 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import HttpRequest, HttpResponse, HttpResponseNotModified
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.views.generic import View
 
@@ -12,7 +12,9 @@ class EnvironmentDeleteMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
         environment = get_object_or_404(Environment, id=environment_id)
         user = get_object_or_404(User, id=user_id)
 
-        _ = EnvironmentUserRole.objects.filter(user=user, environment=environment).delete()
+        _ = EnvironmentUserRole.objects.filter(
+            user=user, environment=environment
+        ).delete()
         return HttpResponse()
 
     def test_func(self) -> bool:

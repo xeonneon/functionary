@@ -9,7 +9,7 @@ from django.views.generic import View
 from thefuzz import process
 
 from core.auth import Permission
-from core.models import Environment, EnvironmentUserRole, Team, TeamUserRole, User
+from core.models import Team, TeamUserRole, User
 from ui.forms.teams import TeamUserRoleForm
 
 
