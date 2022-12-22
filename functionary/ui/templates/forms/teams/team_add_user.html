@@ -9,11 +9,13 @@
             hx-swap="outerHTML"
             hx-target="#user-list"/>
             {{ form.user.errors }}
-            {% include "partials/teams/user_list.html" with usernames=None %}
+            {% include "partials/teams/user_list.html" with usernames=usernames %}
         </div>
         <div class="field column">
-            <label class="{% if form.role.errors %}errors{% endif %} label" for="id_role">Role:</label>
-            {{ form.role }}
+            <label class="{% if form.role.errors %}errors{% endif %} label" for="{{ form.role.id_for_label }}">Role:</label>
+            <div class="select is-medium is-fullwidth">
+                {{ form.role }}
+            </div>
         </div>
     </div>
 

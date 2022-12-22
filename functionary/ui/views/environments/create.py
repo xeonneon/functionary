@@ -10,17 +10,20 @@ from thefuzz import process
 
 from core.auth import Permission
 from core.models import Environment, EnvironmentUserRole, User
-from ui.forms.environments import EnvForm
+from ui.forms.environments import EnvUserRoleForm
+
+from .utils import get_team_members
 
 
 class EnvironmentCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
     def get(self, request: HttpRequest, environment_id: str):
         environment = get_object_or_404(Environment, id=environment_id)
 
-        form = EnvForm()
+        form = EnvUserRoleForm()
         context = {
             "form": form,
             "environment_id": str(environment.id),
+            "usernames": [user.username for user in User.objects.all()[:5]],
         }
         return render(
             request, "partials/environments/environment_add_user.html", context
@@ -35,7 +38,7 @@ class EnvironmentCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
         data["environment"] = environment
         data["user"] = user
 
-        form = EnvForm(data=data)
+        form = EnvUserRoleForm(data=data)
         if not form.is_valid():
             if user is None:
                 form.add_error(
@@ -43,7 +46,11 @@ class EnvironmentCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
                     ValidationError("User not found.", code="invalid"),
                 )
 
-            context = {"form": form, "environment_id": str(environment.id)}
+            context = {
+                "form": form,
+                "environment_id": str(environment.id),
+                "usernames": [user.username for user in User.objects.all()[:5]],
+            }
             return render(
                 request, "forms/environments/environment_add_user.html", context
             )
@@ -56,7 +63,7 @@ class EnvironmentCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
             _ := EnvironmentUserRole.objects.filter(
                 environment=environment, user=user
             ).first()
-        ) is not None:
+        ) is not None or user in get_team_members(environment):
             form.add_error(
                 "user",
                 ValidationError(
@@ -72,7 +79,6 @@ class EnvironmentCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
             user=form.cleaned_data["user"],
             environment=form.cleaned_data["environment"],
             role=form.cleaned_data["role"],
-            inherited=False,
         )
         return HttpResponseRedirect(
             reverse("ui:environment-detail", kwargs={"pk": environment.id})

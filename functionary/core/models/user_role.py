@@ -60,7 +60,6 @@ class EnvironmentUserRole(UserRole):
         on_delete=models.CASCADE,
         related_name="user_roles",
     )
-    inherited = models.BooleanField(default=True)
 
     class Meta:
         constraints = [

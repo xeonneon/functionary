@@ -2,76 +2,165 @@ from typing import Union
 
 from django.db.models import QuerySet
 
-from core.models import Environment, EnvironmentUserRole, TeamUserRole, User
+from core.auth import ROLE_HEIRARCHY_MAP, Role
+from core.models import Environment, EnvironmentUserRole, Team, TeamUserRole, User
 
 
-def get_user_env_role(user: User, environment: Environment) -> EnvironmentUserRole:
-    env_user_role = EnvironmentUserRole.objects.filter(
-        user=user, environment=environment
-    ).first()
-    if not env_user_role:
-        env_user_role = TeamUserRole.objects.get(user=user, team=environment.team)
-    return env_user_role
+def get_user_role(
+    user: User, environment: Environment
+) -> tuple[str, Union[Environment, Team]]:
+    """Get the effective role of the user with respect to the Environment and Team
+
+    This function returns the effective role the user has within an environment,
+    which is the highest role that user is currently assigned between the environment
+    and the team. This function also returns a reference to the environment or team
+    that their effective role is coming from.
+
+    If the user is not part of the environment, and they are not on the team,
+    returns a None for both return values.
+
+    If the user has an EnvironmentUserRole, and their permissions are
+    equivalent to their TeamUserRole, then the origin of their effective
+    role will always be from the Environment.
+
+    Args:
+        user: User object for the user whose highest role you want to know
+        environment: The target environment
+
+    Returns:
+        role, team|environment: Return a tuple with the role string and the
+            Environment or Team that role came from
+        None, None: Return a tuple filled with None if user was not part of the
+            team and environment
+    """
+
+    if user not in get_env_members(environment) and user not in get_team_members(
+        environment
+    ):
+        return None, None
+
+    if (
+        env_user_role := EnvironmentUserRole.objects.filter(
+            user=user, environment=environment
+        ).first()
+    ) is None:
+        return (
+            TeamUserRole.objects.get(user=user, team=environment.team).role,
+            environment.team,
+        )
+
+    if (
+        team_user_role := TeamUserRole.objects.filter(
+            user=user, team=environment.team
+        ).first()
+    ) is None:
+        return env_user_role.role, environment
+
+    if (
+        ROLE_HEIRARCHY_MAP.get(env_user_role.role).value
+        < ROLE_HEIRARCHY_MAP.get(team_user_role.role).value
+    ):
+        return team_user_role.role, environment.team
+    return env_user_role.role, environment
 
 
-def get_users(env: Environment) -> list[Union[TeamUserRole, EnvironmentUserRole]]:
+def get_min_role(user: User, environment: Environment) -> str:
+    """Get the minimum role the user has with respect to the environment"""
+    if (
+        env_role := EnvironmentUserRole.objects.filter(
+            user=user, environment=environment
+        ).first()
+    ) is None:
+        return TeamUserRole.objects.get(user=user, team=environment.team).role
+
+    if (
+        team_role := TeamUserRole.objects.filter(
+            user=user, team=environment.team
+        ).first()
+    ) is None:
+        return env_role.role
+
+    return (
+        env_role.role
+        if ROLE_HEIRARCHY_MAP.get(env_role.role)
+        < ROLE_HEIRARCHY_MAP.get(team_role.role)
+        else team_role.role
+    )
+
+
+def get_users(env: Environment) -> list[dict]:
     """Get list of users who are part of the environment
 
-    Get a list of users who are part of the environment, including users
-    who are inheriting their read access from the team of that environment.
-    Users who have inherited their access will have an inherited attribute
-    attached to their TeamUserRole object.
+    Get a list of users who have access to the environment. This includes
+    the members of the team that the environment belongs to. The list will
+    be sorted in decending order based on role.
 
     Args:
         env: The environment to get users from
 
     Returns:
-        team_members: A list containing all the users who have
+        users: A list of dictionaries containing all the users who have
             access to the environment.
     """
-    env_members, env_member_ids = get_env_members(env)
-    return [user for user in env_members]
+    env_members = get_env_members(env)
+    team_members = get_team_members(env)
+
+    # Use set to remove duplicate users
+    all_users = set(env_members + team_members)
+
+    users = []
+    for user in all_users:
+        user_elements = {}
+        role, origin = get_user_role(user, env)
+        user_elements["user"] = user
+        user_elements["role"] = role
+        user_elements["origin"] = origin.name
+        users.append(user_elements)
+
+    # Sort users by their role in decending order
+    users.sort(
+        key=lambda x: ROLE_HEIRARCHY_MAP.get(x.get("role").upper()).value, reverse=True
+    )
+    return users
+
+
+def get_valid_roles(role: str) -> list[Role]:
+    role_value = ROLE_HEIRARCHY_MAP.get(role).value
+    valid_roles = [
+        r.name for r in Role if ROLE_HEIRARCHY_MAP.get(r.name).value >= role_value
+    ]
+    return valid_roles
 
 
 def get_env_members(
     env: Environment,
-) -> tuple[QuerySet[EnvironmentUserRole], dict[int, EnvironmentUserRole]]:
-    """Get a QuerySet of all users in environment and dict of their IDs
+) -> list[User]:
+    """Get a list of all users in environment
 
-    Return a QuerySet of all users in environment, along with a dictionary
-    that has all of the user IDs
+    Return a list of all users in the environment
 
     Args:
         env: The environment to get the users from
 
     Returns:
         members: A list of all members of the environment
-        ids:  Dictionary with all the user IDs
     """
-    members: list[EnvironmentUserRole] = [user for user in env.user_roles.all()]
-    ids = {}
-    for user in members:
-        ids[user.user.id] = user
-    return members, ids
+    members: list[User] = [user.user for user in env.user_roles.all()]
+    return members
 
 
 def get_team_members(
     env: Environment,
-) -> tuple[QuerySet[TeamUserRole], dict[int, TeamUserRole]]:
-    """Get a QuerySet of all users in the env->team and their IDs
+) -> list[User]:
+    """Get a list of all users in the env->team
 
-    Return a QuerySet of all users on the team that owns the environment
-    along with a dictionary that has all of the user IDs
+    Return a list of all users on the team that owns the environment
 
     Args:
         env: The environment to get the users from
 
     Returns:
         members: A list of all members of the env->team
-        ids:  Dictionary with all the user IDs
     """
-    members: list[TeamUserRole] = [user for user in env.team.user_roles.all()]
-    ids = {}
-    for user in members:
-        ids[user.user.id] = user
-    return members, ids
+    members: list[User] = [user.user for user in env.team.user_roles.all()]
+    return members

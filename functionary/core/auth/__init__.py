@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, IntEnum, auto
 
 
 class Permission(Enum):
@@ -73,6 +73,15 @@ class Role(Enum):
     READ_ONLY = "read_only"
 
 
+class RoleHeirarchy(IntEnum):
+    """Enum that sorts the role privileges in ascending order"""
+
+    READ_ONLY = auto()
+    OPERATOR = auto()
+    DEVELOPER = auto() 
+    ADMIN = auto()
+
+
 # ADMIN gets all permissions
 _ADMIN_PERMISSIONS = [permission.value for permission in Permission]
 
@@ -100,4 +109,12 @@ ROLE_PERMISSION_MAP = {
     Role.DEVELOPER.name: _DEVELOPER_PERMISSIONS,
     Role.READ_ONLY.name: _READ_ONLY_PERMISSIONS,
     Role.OPERATOR.name: _OPERATOR_PERMISSIONS,
+}
+
+# To use this map, pass in the name of the role in uppercase form
+ROLE_HEIRARCHY_MAP = {
+    Role.READ_ONLY.name: RoleHeirarchy.READ_ONLY,
+    Role.OPERATOR.name: RoleHeirarchy.OPERATOR,
+    Role.DEVELOPER.name: RoleHeirarchy.DEVELOPER,
+    Role.ADMIN.name: RoleHeirarchy.ADMIN
 }

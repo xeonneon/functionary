@@ -10,17 +10,18 @@ from thefuzz import process
 
 from core.auth import Permission
 from core.models import Environment, EnvironmentUserRole, Team, TeamUserRole, User
-from ui.forms.teams import TeamForm
+from ui.forms.teams import TeamUserRoleForm
 
 
 class TeamCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
     def get(self, request: HttpRequest, team_id: str):
         team = get_object_or_404(Team, id=team_id)
 
-        form = TeamForm()
+        form = TeamUserRoleForm()
         context = {
             "form": form,
             "team_id": str(team.id),
+            "usernames": [user.username for user in User.objects.all()[:5]],
         }
         return render(request, "partials/teams/team_add_user.html", context)
 
@@ -32,7 +33,7 @@ class TeamCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
         data["team"] = team
         data["user"] = user
 
-        form = TeamForm(data=data)
+        form = TeamUserRoleForm(data=data)
         if not form.is_valid():
             if user is None:
                 form.add_error(
@@ -54,7 +55,11 @@ class TeamCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
                     "User already has a role on this team.", code="invalid"
                 ),
             )
-            context = {"form": form, "team_id": str(team.id)}
+            context = {
+                "form": form,
+                "team_id": str(team.id),
+                "usernames": [user.username for user in User.objects.all()[:5]],
+            }
             return render(request, "forms/teams/team_add_user.html", context)
 
         _ = TeamUserRole.objects.create(
@@ -62,23 +67,6 @@ class TeamCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
             team=form.cleaned_data["team"],
             role=form.cleaned_data["role"],
         )
-
-        """
-        Add user to all evironments owned by that team.
-        Delete existing user for the situation where a user who was already part of the
-        environment gets added to the team
-        """
-        environments = Environment.objects.filter(team=form.cleaned_data["team"])
-        for environment in environments:
-            _ = EnvironmentUserRole.objects.filter(
-                user=form.cleaned_data["user"], environment=environment
-            ).delete()
-            _ = EnvironmentUserRole.objects.create(
-                user=form.cleaned_data["user"],
-                role=form.cleaned_data["role"],
-                environment=environment,
-                inherited=True,
-            )
 
         return HttpResponseRedirect(reverse("ui:team-detail", kwargs={"pk": team.id}))
 

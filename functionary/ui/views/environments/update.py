@@ -8,18 +8,18 @@ from django_htmx import http
 
 from core.auth import Permission
 from core.models import Environment, EnvironmentUserRole, User
-from ui.forms.environments import EnvForm
+from ui.forms.environments import EnvUserRoleForm
 
-from .utils import get_user_env_role
+from .utils import get_user_role
 
 
 class EnvironmentUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
     def get(self, request: HttpRequest, environment_id: str, user_id: str):
         environment = get_object_or_404(Environment, id=environment_id)
         user = get_object_or_404(User, id=user_id)
-        env_user_role = get_user_env_role(user, environment)
+        env_user_role = get_user_role(user, environment)
 
-        form = EnvForm(initial={"user": user, "role": env_user_role.role})
+        form = EnvUserRoleForm(initial={"user": user, "role": env_user_role[0]})
         context = {
             "form": form,
             "environment_id": str(environment.id),
@@ -34,13 +34,13 @@ class EnvironmentUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
         """Update users role in the environment"""
         environment = get_object_or_404(Environment, id=environment_id)
         user = get_object_or_404(User, id=user_id)
-        env_user_role = get_user_env_role(user, environment)
+        env_user_role = get_user_role(user, environment)
 
         data: QueryDict = request.POST.copy()
         data["environment"] = environment
         data["user"] = user
 
-        form = EnvForm(data=data)
+        form = EnvUserRoleForm(data=data)
         if not form.is_valid():
             context = {
                 "form": form,
@@ -55,14 +55,20 @@ class EnvironmentUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
             )
 
         # If user's role did not change
-        if form.cleaned_data["role"] == env_user_role.role:
+        if form.cleaned_data["role"] == env_user_role[0]:
             return HttpResponseRedirect(
                 reverse("ui:environment-detail", kwargs={"pk": environment.id})
             )
 
-        _ = EnvironmentUserRole.objects.filter(
-            user=form.cleaned_data["user"], environment=form.cleaned_data["environment"]
-        ).update(role=form.cleaned_data["role"])
+        """
+        Use update_or_create in the event that a team member is getting assigned a role
+        to the environment. Otherwise, update the existing EnvironmentUserRole's role
+        """
+        _ = EnvironmentUserRole.objects.update_or_create(
+            user=form.cleaned_data["user"],
+            environment=form.cleaned_data["environment"],
+            defaults={"role": form.cleaned_data["role"]},
+        )
 
         return HttpResponseRedirect(
             reverse("ui:environment-detail", kwargs={"pk": environment.id})

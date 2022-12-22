@@ -4,9 +4,9 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.generic import View
 
-from core.auth import Permission
+from core.auth import ROLE_HEIRARCHY_MAP, Permission
 from core.models import Environment, EnvironmentUserRole, Team, TeamUserRole, User
-from ui.forms.teams import TeamForm
+from ui.forms.teams import TeamUserRoleForm
 
 
 class TeamUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -15,7 +15,7 @@ class TeamUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
         user = get_object_or_404(User, id=user_id)
         team_user_role = TeamUserRole.objects.get(user=user, team=team)
 
-        form = TeamForm(initial={"user": user, "role": team_user_role.role})
+        form = TeamUserRoleForm(initial={"user": user, "role": team_user_role.role})
         context = {
             "form": form,
             "team_id": str(team.id),
@@ -32,7 +32,7 @@ class TeamUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
         data["team"] = team
         data["user"] = user
 
-        form = TeamForm(data=data)
+        form = TeamUserRoleForm(data=data)
         if not form.is_valid():
             context = {
                 "form": form,
@@ -45,13 +45,6 @@ class TeamUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
         _ = TeamUserRole.objects.filter(
             user=form.cleaned_data["user"], team=form.cleaned_data["team"]
         ).update(role=form.cleaned_data["role"])
-
-        # Update user's role for all environments they are inherited in
-        environments = Environment.objects.filter(team=team)
-        for environment in environments:
-            _ = EnvironmentUserRole.objects.filter(
-                user=form.cleaned_data["user"], environment=environment, inherited=True
-            ).update(role=form.cleaned_data["role"])
 
         return HttpResponseRedirect(reverse("ui:team-detail", kwargs={"pk": team.id}))
 

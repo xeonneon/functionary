@@ -1,1 +1,12 @@
-{% include "partials/modal.html" with title="Add user" description="Add user to environment." content="forms/environments/environment_add_user.html" %}
+{% extends "partials/modal.html" %}
+{% block modal_title %}
+Add User
+{% endblock%}
+
+{% block modal_description %}
+Add user to the environment.
+{% endblock %}
+
+{% block modal_block%}
+{% include "forms/environments/environment_add_user.html" %}
+{% endblock%}

@@ -22,15 +22,12 @@ class EnvironmentDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView)
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         env = self.get_object()
-        env_members = get_users(env)
 
         context["packages"] = Package.objects.filter(environment=env)
-        context["environment_create_perm"] = (
-            True
-            if (self.request.user.has_perm(Permission.ENVIRONMENT_UPDATE, env))
-            else False
+        context["environment_create_perm"] = self.request.user.has_perm(
+            Permission.ENVIRONMENT_UPDATE, env
         )
-        context["users"] = env_members
+        context["users"] = get_users(env)
         context["environment_id"] = str(env.id)
         context["var_create"] = self.request.user.has_perm(
             Permission.VARIABLE_CREATE, env

@@ -1,1 +1,12 @@
-{% include "partials/modal.html" with title="Update user role" description="Update the role of the user." content="forms/teams/team_update_user.html" %}
+{% extends "partials/modal.html" %}
+{% block modal_title %}
+Update User Role
+{% endblock%}
+
+{% block modal_description %}
+Update the role of the user for this team.
+{% endblock %}
+
+{% block modal_block%}
+{% include "forms/teams/team_update_user.html" %}
+{% endblock%}

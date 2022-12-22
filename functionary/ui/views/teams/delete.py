@@ -13,17 +13,6 @@ class TeamDeleteMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
         user = get_object_or_404(User, id=user_id)
 
         _ = TeamUserRole.objects.get(user=user, team=team).delete()
-
-        """
-        Delete all inherited relationships for the user
-        within all environments owned by the team.
-        """
-        environments = Environment.objects.filter(team=team)
-        for environment in environments:
-            _ = EnvironmentUserRole.objects.filter(
-                user=user, environment=environment, inherited=True
-            ).delete()
-
         return HttpResponse("")
 
     def test_func(self) -> bool:
