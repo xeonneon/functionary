@@ -11,6 +11,20 @@
       "dependsOn": "functionary: django up"
     },
     {
+      "label": "functionary: start tailwind",
+      "type": "shell",
+      "command": "npm run tailwind-watch",
+      "problemMatcher": [],
+      "hide": false,
+    },
+    {
+      "label": "functionary: build tailwind",
+      "type": "shell",
+      "command": "npm run tailwind-build",
+      "problemMatcher": [],
+      "hide": false,
+    },
+    {
       "label": "functionary: django up",
       "type": "shell",
       "command": "docker compose -f ../docker/docker-compose.yml up --build -d django",
