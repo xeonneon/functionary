@@ -22,7 +22,7 @@ class TeamUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
             "user_id": str(user.id),
             "username": user.username,
         }
-        return render(request, "partials/teams/team_update_user.html", context)
+        return render(request, "forms/teams/team_update_user.html", context)
 
     def post(self, request: HttpRequest, team_id: str, user_id: str):
         team = get_object_or_404(Team, id=team_id)

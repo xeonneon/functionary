@@ -27,7 +27,7 @@ class EnvironmentUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
             "username": user.username,
         }
         return render(
-            request, "partials/environments/environment_update_user.html", context
+            request, "forms/environments/environment_update_user.html", context
         )
 
     def post(self, request: HttpRequest, environment_id: str, user_id: str):

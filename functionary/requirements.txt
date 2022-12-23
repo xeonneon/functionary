@@ -113,6 +113,7 @@ pyyaml==6.0
     #   -r requirements.in
     #   drf-spectacular
 redis==4.4.0
+rapidfuzz==2.13.7
     # via -r requirements.in
 requests==2.28.1
     # via
@@ -127,8 +128,6 @@ six==1.16.0
     #   python-dateutil
 sqlparse==0.4.3
     # via django
-thefuzz==0.19.0
-    # via -r requirements.in
 typing-extensions==4.4.0
     # via pydantic
 tzdata==2022.7

@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 from django.views.generic import View
-from thefuzz import process
+from rapidfuzz import process
 
 from core.auth import Permission
 from core.models import Team, TeamUserRole, User
@@ -23,7 +23,7 @@ class TeamCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
             "team_id": str(team.id),
             "usernames": [user.username for user in User.objects.all()[:5]],
         }
-        return render(request, "partials/teams/team_add_user.html", context)
+        return render(request, "forms/teams/team_add_user.html", context)
 
     def post(self, request: HttpRequest, team_id: str):
         team = get_object_or_404(Team, id=team_id)
@@ -80,8 +80,13 @@ class TeamCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
 def get_users(request: HttpRequest) -> HttpResponse:
     username = request.GET.get("user")
     users = User.objects.all()
-    results = process.extractBests(
-        username, [user.username for user in users], score_cutoff=25
+
+    if username == "":
+        context = {"usernames": [user.username for user in users[:5]]}
+        return render(request, "partials/teams/user_list.html", context)
+
+    results = process.extract(
+        username, [user.username for user in users], score_cutoff=50
     )
 
     context = {"usernames": [result[0] for result in results]}

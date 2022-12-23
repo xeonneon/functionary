@@ -1,12 +1,9 @@
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import ValidationError
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, QueryDict
+from django.http import HttpRequest, HttpResponseRedirect, QueryDict
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from django.views.decorators.http import require_GET
 from django.views.generic import View
-from thefuzz import process
 
 from core.auth import Permission
 from core.models import Environment, EnvironmentUserRole, User
@@ -25,9 +22,7 @@ class EnvironmentCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
             "environment_id": str(environment.id),
             "usernames": [user.username for user in User.objects.all()[:5]],
         }
-        return render(
-            request, "partials/environments/environment_add_user.html", context
-        )
+        return render(request, "forms/environments/environment_add_user.html", context)
 
     def post(self, request: HttpRequest, environment_id: str):
         """Add user to the environment"""
@@ -87,16 +82,3 @@ class EnvironmentCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
     def test_func(self) -> bool:
         environment = get_object_or_404(Environment, id=self.kwargs["environment_id"])
         return self.request.user.has_perm(Permission.ENVIRONMENT_UPDATE, environment)
-
-
-@require_GET
-@login_required
-def get_users(request: HttpRequest) -> HttpResponse:
-    username = request.GET.get("user")
-    users = User.objects.all()
-    results = process.extractBests(
-        username, [user.username for user in users], score_cutoff=25
-    )
-
-    context = {"usernames": [result[0] for result in results]}
-    return render(request, "partials/environments/user_list.html", context)

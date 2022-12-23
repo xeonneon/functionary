@@ -1,17 +1,37 @@
-<form hx-post="{% url 'ui:update-environment-member' environment_id user_id %}" method="post">
-    {% csrf_token %}
-    <div class="columns is-multiline">
-        <div class="field control column is-half">
-            <label class="label" for="username-field">User:</label>
-            <input id="username-field" class="input is-medium" disabled placeholder="{{ username }}"/>
-        </div>
-        <div class="field column is-half">
-            <label class="{% if form.role.errors %}errors{% endif %} label" for="{{ form.role.id_for_label }}">Role:</label>
-            <div class="select is-medium is-fullwidth">
-                {{ form.role }}
-            </div>
+{% extends "partials/modal.html" %}
+
+{% block modal_title %}
+Update User Role
+{% endblock%}
+
+{% block modal_description %}
+Update the role of the user in this environment.
+{% endblock %}
+
+{% block form_declaration %}
+<form hx-post="{% url 'ui:update-environment-member' environment_id user_id %}" method="post" hx-swap="outerHTML" hx-target="#form-modal">
+{% endblock %}
+
+{% block modal_block%}
+{% csrf_token %}
+<div class="columns is-multiline">
+    <div class="field control column is-half">
+        <label class="label" for="username-field">User:</label>
+        <input id="username-field" class="input is-medium" disabled placeholder="{{ username }}"/>
+    </div>
+    <div class="field column is-half">
+        <label class="{% if form.role.errors %}errors{% endif %} label" for="{{ form.role.id_for_label }}">Role:</label>
+        <div class="select is-medium is-fullwidth">
+            {{ form.role }}
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <button class="button is-link" type="submit" value="Update Role">Update Role</button>
+{% block modal_footer %}
+    <button class="button is-link is-medium" type="submit" value="Update Role">Update Role</button>
+{% endblock %}
+
+{% block form_end %}
 </form>
+{% endblock %}
