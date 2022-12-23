@@ -90,3 +90,5 @@ venv.bak/
 
 # vim
 *.swp
+
+node_modules/*
