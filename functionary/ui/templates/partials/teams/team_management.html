@@ -20,7 +20,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for u in users %}
+        {% for u in user_details %}
             <tr>
                 <td>{{ u.user.first_name }} {{ u.user.last_name }}</td>
                 <td>{{ u.user.username }}</td>
@@ -29,7 +29,7 @@
                     <button class="button is-small has-text-link is-white singletonActive"
                             hx-get="{% url 'ui:update-team-member' team_id=team_id user_id=u.user.id %}"
                             hx-target="#update-modal">
-                        <span class="fa fa-wrench"></span>
+                        <span class="fa fa-pencil-alt"></span>
                     </button>
                 </td>
                 <td>

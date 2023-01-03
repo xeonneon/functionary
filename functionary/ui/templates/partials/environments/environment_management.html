@@ -8,10 +8,7 @@
         <span class="fa fa-plus"></span>
     </button>
 </label>
-
-<div id="add-user">
-</div>
-
+<div id="add-user"></div>
 <table class="table is-hoverable">
     <thead>
         <tr>
@@ -24,7 +21,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for u in users %}
+        {% for u in user_details %}
             <tr>
                 <td>{{ u.user.first_name }} {{ u.user.last_name }}</td>
                 <td>{{ u.user.username }}</td>
@@ -34,15 +31,13 @@
                     <button class="button is-small has-text-link is-white singletonActive"
                             hx-get="{% url 'ui:update-environment-member' environment_id=environment_id user_id=u.user.id %}"
                             hx-target="#update-modal">
-                        <span class="fa fa-wrench"></span>
+                        <span class="fa fa-pencil-alt"></span>
                     </button>
                 </td>
                 <td>
                     <button class="button is-small has-text-link is-white singletonActive"
                             hx-delete="{% url 'ui:delete-environment-member' environment_id=environment_id user_id=u.user.id %}"
-                            hx-confirm="Are you sure you want to remove {{ u.user.username }}'s from this environment?"
-                            hx-target="closest tr"
-                            hx-swap="outerHTML swap:1s">
+                            hx-confirm="Are you sure you want to remove {{ u.user.username }}'s explicit role from this environment?">
                         <span class="fa fa-trash"></span>
                     </button>
                 </td>
@@ -50,5 +45,4 @@
         {% endfor %}
     </tbody>
 </table>
-<div id="update-modal">
-</div>
+<div id="update-modal"></div>

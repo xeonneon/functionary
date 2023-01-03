@@ -12,7 +12,7 @@ Add user to the team.
 <form hx-post="{% url 'ui:create-team-member' team_id %}" method="post" hx-swap="outerHTML" hx-target="#form-modal">
 {% endblock %}
 
-{% block modal_block%}
+{% block modal_content %}
 {% csrf_token %}
 <div class="columns is-multiline">
     <div class="field column is-half">

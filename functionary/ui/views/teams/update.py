@@ -27,12 +27,13 @@ class TeamUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
     def post(self, request: HttpRequest, team_id: str, user_id: str):
         team = get_object_or_404(Team, id=team_id)
         user = get_object_or_404(User, id=user_id)
+        team_user_role = get_object_or_404(TeamUserRole, team=team, user=user)
 
         data: QueryDict = request.POST.copy()
         data["team"] = team
         data["user"] = user
 
-        form = TeamUserRoleForm(data=data)
+        form = TeamUserRoleForm(data=data, instance=team_user_role)
         if not form.is_valid():
             context = {
                 "form": form,

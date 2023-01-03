@@ -1,6 +1,6 @@
 from typing import Union
 
-from core.auth import ROLE_HEIRARCHY_MAP, Role
+from core.auth import Role
 from core.models import Environment, EnvironmentUserRole, Team, TeamUserRole, User
 
 
@@ -54,36 +54,9 @@ def get_user_role(
     ) is None:
         return env_user_role.role, environment
 
-    if (
-        ROLE_HEIRARCHY_MAP.get(env_user_role.role).value
-        < ROLE_HEIRARCHY_MAP.get(team_user_role.role).value
-    ):
+    if Role[env_user_role.role] < Role[team_user_role.role]:
         return team_user_role.role, environment.team
     return env_user_role.role, environment
-
-
-def get_min_role(user: User, environment: Environment) -> str:
-    """Get the minimum role the user has with respect to the environment"""
-    if (
-        env_role := EnvironmentUserRole.objects.filter(
-            user=user, environment=environment
-        ).first()
-    ) is None:
-        return TeamUserRole.objects.get(user=user, team=environment.team).role
-
-    if (
-        team_role := TeamUserRole.objects.filter(
-            user=user, team=environment.team
-        ).first()
-    ) is None:
-        return env_role.role
-
-    return (
-        env_role.role
-        if ROLE_HEIRARCHY_MAP.get(env_role.role)
-        < ROLE_HEIRARCHY_MAP.get(team_role.role)
-        else team_role.role
-    )
 
 
 def get_users(env: Environment) -> list[dict]:
@@ -115,19 +88,9 @@ def get_users(env: Environment) -> list[dict]:
         user_elements["origin"] = origin.name
         users.append(user_elements)
 
-    # Sort users by their role in decending order
-    users.sort(
-        key=lambda x: ROLE_HEIRARCHY_MAP.get(x.get("role").upper()).value, reverse=True
-    )
+    # Sort users by their username in ascending order
+    users.sort(key=lambda x: x["user"].username)
     return users
-
-
-def get_valid_roles(role: str) -> list[Role]:
-    role_value = ROLE_HEIRARCHY_MAP.get(role).value
-    valid_roles = [
-        r.name for r in Role if ROLE_HEIRARCHY_MAP.get(r.name).value >= role_value
-    ]
-    return valid_roles
 
 
 def get_env_members(

@@ -27,7 +27,7 @@ class EnvironmentDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView)
         context["environment_create_perm"] = self.request.user.has_perm(
             Permission.ENVIRONMENT_UPDATE, env
         )
-        context["users"] = get_users(env)
+        context["user_details"] = get_users(env)
         context["environment_id"] = str(env.id)
         context["var_create"] = self.request.user.has_perm(
             Permission.VARIABLE_CREATE, env

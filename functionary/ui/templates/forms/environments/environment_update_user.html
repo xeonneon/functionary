@@ -12,7 +12,7 @@ Update the role of the user in this environment.
 <form hx-post="{% url 'ui:update-environment-member' environment_id user_id %}" method="post" hx-swap="outerHTML" hx-target="#form-modal">
 {% endblock %}
 
-{% block modal_block%}
+{% block modal_content %}
 {% csrf_token %}
 <div class="columns is-multiline">
     <div class="field control column is-half">

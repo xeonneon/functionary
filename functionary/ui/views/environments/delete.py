@@ -11,11 +11,13 @@ class EnvironmentDeleteMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
     def delete(self, request: HttpRequest, environment_id: str, user_id: str):
         environment = get_object_or_404(Environment, id=environment_id)
         user = get_object_or_404(User, id=user_id)
+        http_reponse = HttpResponse()
+        http_reponse.headers["HX-Refresh"] = "true"
 
         _ = EnvironmentUserRole.objects.filter(
             user=user, environment=environment
         ).delete()
-        return HttpResponse()
+        return http_reponse
 
     def test_func(self) -> bool:
         environment = get_object_or_404(Environment, id=self.kwargs["environment_id"])
