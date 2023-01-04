@@ -43,9 +43,7 @@ class TeamUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
             }
             return (render(request, "forms/teams/team_update_user.html", context),)
 
-        _ = TeamUserRole.objects.filter(
-            user=form.cleaned_data["user"], team=form.cleaned_data["team"]
-        ).update(role=form.cleaned_data["role"])
+        form.save()
 
         return HttpResponseRedirect(reverse("ui:team-detail", kwargs={"pk": team.id}))
 

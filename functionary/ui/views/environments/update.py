@@ -63,15 +63,7 @@ class EnvironmentUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
                 reverse("ui:environment-detail", kwargs={"pk": environment.id})
             )
 
-        """
-        Use update_or_create in the event that a team member is getting assigned a role
-        to the environment. Otherwise, update the existing EnvironmentUserRole's role
-        """
-        _ = EnvironmentUserRole.objects.update_or_create(
-            user=form.cleaned_data["user"],
-            environment=form.cleaned_data["environment"],
-            defaults={"role": form.cleaned_data["role"]},
-        )
+        form.save()
 
         return HttpResponseRedirect(
             reverse("ui:environment-detail", kwargs={"pk": environment.id})
