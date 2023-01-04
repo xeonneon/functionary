@@ -21,7 +21,7 @@
               href="{% static 'css/bulma-0.9.4.min.css' %}"
               type="text/css"/>
         <link rel="stylesheet"
-              href="{% static 'css/fontawesome-all-5.15.4.min.css' %}"
+              href="{% static 'css/fontawesome-solid-5.15.4.min.css' %}"
               type="text/css"/>
         <link rel="stylesheet"
               href="{% static 'css/pretty-print-json-1.2.css' %}"
@@ -29,7 +29,13 @@
         <link rel="stylesheet"
               href="{% static 'css/functionary.css' %}"
               type="text/css"/>
-        <title>Functionary</title>
+        {% block extra_style %}
+        {% endblock extra_style %}
+        <title>
+            {% block title %}
+                Functionary
+            {% endblock title %}
+        </title>
         <script src="{% static 'js/htmx-1.8.4.min.js' %}"></script>
         <script src="{% static 'js/pretty-print-json-1.2.min.js' %}"></script>
         <!-- This script will run when the page loads and the menus are available -->
@@ -42,7 +48,8 @@
                     <div class="column">
                         <a href="{% url 'ui:home' %}">
                             <h1 class="title is-1">
-                                <img src="{% static 'functionary_f_logo.png' %}"
+                                <img class="functionary-logo"
+                                     src="{% static 'functionary_f_logo.png' %}"
                                      alt="F"
                                      width="64"
                                      height="64"/>
@@ -56,16 +63,18 @@
                             {% if user.is_authenticated %}
                                 <div>
                                     <p>
-                                        <span class="icon"><i class="fa fa-user"></i></span>&nbsp;{{ user }}
+                                        <span class="icon"><i class="fa fa-user"></i></span>
+                                        <a href="{% url 'socialaccount_connections' %}">{{ user }}</a>
                                     </p>
                                     {% include "partials/env_selector.html" %}
                                 </div>
-                                <div>
-                                    <p>
-                                        <span class="icon has-text-danger"><i class="fa fa-door-open"></i></span>
-                                        <a class="is-underlined" href="{% url 'ui:logout' %}">Logout</a>
-                                    </p>
-                                </div>
+                                <form method="post" action="{% url 'account_logout' %}">
+                                    {% csrf_token %}
+                                    <button class="button is-underlined is-ghost has-text-white pr-0 pb-0"
+                                            type="submit">
+                                        <span class="icon has-text-danger mr-2"><i class="fa fa-door-open"></i></span>Logout
+                                    </button>
+                                </form>
                             {% endif %}
                         </div>
                     </div>
@@ -130,6 +139,9 @@
                 </aside>
             {% endif %}
             <main class="column is-9 container">
+                {% if messages %}
+                    {% include "partials/auth_messages.html" %}
+                {% endif %}
                 <div id="data_div"
                      hx-get="{{ request.get_full_path }}"
                      hx-trigger="reloadData from:body"

@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
 {% load extras %}
+{% block extra_style %}
+    <link rel="stylesheet"
+          href="{% static 'css/bulma-accordion-2.0.1.min.css' %}"/>
+{% endblock extra_style %}
 {% block content %}
     <div class="column is-full">
         <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
@@ -61,34 +65,36 @@
                 <span class="ml-4">{{ function.output_format }}</span>
             </div>
         {% endif %}
-        <label class="label ml-4">Create Task:</label>
-        <div class="has-background-white-ter ml-4">
-            <form id="djangoForm"
-                  method="post"
-                  action="{% url 'ui:function-execute' %}">
-                {% csrf_token %}
-                <input type="hidden" name="function_id" value="{{ function.id }}"/>
-                <div class="column has-addons">
-                    {{ form.non_field_errors }}
-                    {{ form }}
-                    {% if missing_variables %}
-                        <div class="field ml-4 missing-variables has-background-danger-light has-text-danger">
-                            <span>Tasking this function may not work as expected; the following variables are missing:</span>
-                            <ul>
-                                {% for missing in missing_variables %}
-                                    <li>
-                                        <span>{{ missing }}</span>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    {% endif %}
-                    <input class="button {% if missing_variables %}is-warning{% else %}is-link{% endif %}"
-                           type="submit"
-                           value="Execute"/>
-                </div>
-            </form>
-        </div>
+        {% if form %}
+            <label class="label ml-4">Create Task:</label>
+            <div class="has-background-white-ter ml-4">
+                <form id="djangoForm"
+                      method="post"
+                      action="{% url 'ui:function-execute' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="function_id" value="{{ function.id }}"/>
+                    <div class="column has-addons">
+                        {{ form.non_field_errors }}
+                        {{ form }}
+                        {% if missing_variables %}
+                            <div class="field ml-4 missing-variables has-background-danger-light has-text-danger">
+                                <span>Tasking this function may not work as expected; the following variables are missing:</span>
+                                <ul>
+                                    {% for missing in missing_variables %}
+                                        <li>
+                                            <span>{{ missing }}</span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        <input class="button {% if missing_variables %}is-warning{% else %}is-link{% endif %}"
+                               type="submit"
+                               value="Execute"/>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
         <div class="p-3 accordions">
             <div class="accordion is-info {% if not form %} is-active{% endif %}">
                 <div class="accordion-header toggle">
@@ -103,8 +109,6 @@
             </div>
         </div>
     </div>
-    <link rel="stylesheet"
-          href="{% static 'css/bulma-accordion-2.0.1.min.css' %}"/>
     <script src="{% static 'js/bulma-accordion-2.0.1.min.js' %}" defer></script>
     <script>
         window.addEventListener('load', (event) => {
