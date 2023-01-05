@@ -20,9 +20,12 @@ class EnvironmentCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
         context = {
             "form": form,
             "environment_id": str(environment.id),
+            "create_user": True,
             "usernames": [user.username for user in User.objects.all()[:5]],
         }
-        return render(request, "forms/environments/environment_add_user.html", context)
+        return render(
+            request, "forms/environmentuserrole_create_or_update.html", context
+        )
 
     def post(self, request: HttpRequest, environment_id: str):
         """Add user to the environment"""
@@ -34,21 +37,6 @@ class EnvironmentCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
         data["user"] = user
 
         form = EnvUserRoleForm(data=data)
-        if not form.is_valid():
-            if user is None:
-                form.add_error(
-                    "user",
-                    ValidationError("User not found.", code="invalid"),
-                )
-
-            context = {
-                "form": form,
-                "environment_id": str(environment.id),
-                "usernames": [user.username for user in User.objects.all()[:5]],
-            }
-            return render(
-                request, "forms/environments/environment_add_user.html", context
-            )
 
         """
         This endpoint is for adding a user to the environment,
@@ -65,16 +53,35 @@ class EnvironmentCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
                     "User already has a role in this environment.", code="invalid"
                 ),
             )
-            context = {"form": form, "environment_id": str(environment.id)}
+            context = {
+                "form": form,
+                "create_user": True,
+                "environment_id": str(environment.id),
+                "usernames": [user.username for user in User.objects.all()[:5]],
+            }
             return render(
-                request, "forms/environments/environment_add_user.html", context
+                request, "forms/environmentuserrole_create_or_update.html", context
             )
 
-        _ = EnvironmentUserRole.objects.create(
-            user=form.cleaned_data["user"],
-            environment=form.cleaned_data["environment"],
-            role=form.cleaned_data["role"],
-        )
+        if not form.is_valid():
+            if user is None:
+                form.add_error(
+                    "user",
+                    ValidationError("User not found.", code="invalid"),
+                )
+
+            context = {
+                "form": form,
+                "environment_id": str(environment.id),
+                "create_user": True,
+                "usernames": [user.username for user in User.objects.all()[:5]],
+            }
+            return render(
+                request, "forms/environmentuserrole_create_or_update.html", context
+            )
+
+        form.save()
+
         return HttpResponseRedirect(
             reverse("ui:environment-detail", kwargs={"pk": environment.id})
         )

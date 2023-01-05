@@ -21,11 +21,13 @@ class TeamCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
         context = {
             "form": form,
             "team_id": str(team.id),
+            "create_user": True,
             "usernames": [user.username for user in User.objects.all()[:5]],
         }
-        return render(request, "forms/teams/team_add_user.html", context)
+        return render(request, "forms/teamuserrole_create_or_update.html", context)
 
     def post(self, request: HttpRequest, team_id: str):
+        """Add user to team"""
         team = get_object_or_404(Team, id=team_id)
 
         data: QueryDict = request.POST.copy()
@@ -34,15 +36,6 @@ class TeamCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
         data["user"] = user
 
         form = TeamUserRoleForm(data=data)
-        if not form.is_valid():
-            if user is None:
-                form.add_error(
-                    "user",
-                    ValidationError("User not found.", code="invalid"),
-                )
-
-            context = {"form": form, "team_id": str(team.id)}
-            return render(request, "forms/teams/team_add_user.html", context)
 
         """
         This endpoint is for adding a user to the team,
@@ -58,15 +51,27 @@ class TeamCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
             context = {
                 "form": form,
                 "team_id": str(team.id),
+                "create_user": True,
                 "usernames": [user.username for user in User.objects.all()[:5]],
             }
-            return render(request, "forms/teams/team_add_user.html", context)
+            return render(request, "forms/teamuserrole_create_or_update.html", context)
 
-        _ = TeamUserRole.objects.create(
-            user=form.cleaned_data["user"],
-            team=form.cleaned_data["team"],
-            role=form.cleaned_data["role"],
-        )
+        if not form.is_valid():
+            if user is None:
+                form.add_error(
+                    "user",
+                    ValidationError("User not found.", code="invalid"),
+                )
+
+            context = {
+                "form": form,
+                "team_id": str(team.id),
+                "create_user": True,
+                "usernames": [user.username for user in User.objects.all()[:5]],
+            }
+            return render(request, "forms/teamuserrole_create_or_update.html", context)
+
+        form.save()
 
         return HttpResponseRedirect(reverse("ui:team-detail", kwargs={"pk": team.id}))
 

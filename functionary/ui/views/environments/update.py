@@ -27,7 +27,7 @@ class EnvironmentUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
             "username": user.username,
         }
         return render(
-            request, "forms/environments/environment_update_user.html", context
+            request, "forms/environmentuserrole_create_or_update.html", context
         )
 
     def post(self, request: HttpRequest, environment_id: str, user_id: str):
@@ -53,7 +53,7 @@ class EnvironmentUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, View)
             }
             return (
                 render(
-                    request, "forms/environments/environment_update_user.html", context
+                    request, "forms/environmentuserrole_create_or_update.html", context
                 ),
             )
 
