@@ -1,24 +1,37 @@
 {% extends "partials/modal.html" %}
 
 {% block modal_title %}
-Add User
-{% endblock%}
+    {% if create_user %}
+        Add User
+    {% else %}
+        Update User's Role
+    {% endif %}
+{% endblock %}
 
 {% block modal_description %}
-Add user to the team.
+    {% if create_user %}
+        Add user to the team.
+    {% else %}
+        Update user's role for the team.
+    {% endif %}
 {% endblock %}
 
 {% block form_declaration %}
     {% if create_user %}
         <form hx-post="{% url 'ui:create-team-member' team_id %}" method="post" hx-swap="outerHTML" hx-target="#form-modal">
     {% else %}
-        <form hx-post="{% url 'ui:update-team-member' team_id user_id %}" method="post" hx-swap="outerHTML" hx-target="#form-modal">
+        <form hx-post="{% url 'ui:update-team-member' team_id team_user_role_id %}" method="post" hx-swap="outerHTML" hx-target="#form-modal">
     {% endif %}
 {% endblock %}
 
 {% block modal_content %}
 {% csrf_token %}
 <div class="columns is-multiline">
+    {% if form.non_field_errors %}
+    <div class="ml-3">
+        {{ form.non_field_errors }}
+    </div>
+    {% endif %} 
     <div class="field column is-half">
         {% if create_user %}
             <label class="{% if form.user.errors %}errors{% endif %} label" for="user">User:</label>
@@ -31,8 +44,10 @@ Add user to the team.
         {% else %}
             <label class="label" for="username-field">User:</label>
             <input id="username-field" class="input is-medium" disabled placeholder="{{ username }}"/>
+            <input type="hidden" name="user" value="{{ user_id }}"/>
         {% endif %}
-            {{ form.user.errors }}
+        <input type="hidden" name="team" value="{{ team_id }}"/>
+        {{ form.user.errors }}
     </div>
     <div class="field column">
         <label class="{% if form.role.errors %}errors{% endif %} label" for="{{ form.role.id_for_label }}">Role:</label>

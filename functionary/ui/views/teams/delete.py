@@ -1,19 +1,18 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
-from django.views.generic import View
+from django.urls import reverse
+from django.views.generic.edit import DeleteView
 
 from core.auth import Permission
-from core.models import Team, TeamUserRole, User
+from core.models import Team, TeamUserRole
 
 
-class TeamDeleteMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def delete(self, request: HttpRequest, team_id: str, user_id: str):
-        team = get_object_or_404(Team, id=team_id)
-        user = get_object_or_404(User, id=user_id)
+class TeamDeleteMemberView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = TeamUserRole
 
-        _ = TeamUserRole.objects.get(user=user, team=team).delete()
-        return HttpResponse("")
+    def get_success_url(self) -> str:
+        team_user_role: TeamUserRole = self.get_object()
+        return reverse("ui:team-detail", kwargs={"pk": team_user_role.team.id})
 
     def test_func(self) -> bool:
         team = get_object_or_404(Team, id=self.kwargs["team_id"])

@@ -6,10 +6,10 @@ from core.models import Environment, EnvironmentUserRole, Team, TeamUserRole, Us
 
 def get_user_role(
     user: User, environment: Environment
-) -> tuple[str, Union[Environment, Team]]:
+) -> tuple[Union[EnvironmentUserRole, TeamUserRole], Union[Environment, Team]]:
     """Get the effective role of the user with respect to the Environment and Team
 
-    This function returns the effective role the user has within an environment,
+    This function returns the effective UserRole the user has within an environment,
     which is the highest role that user is currently assigned between the environment
     and the team. This function also returns a reference to the environment or team
     that their effective role is coming from.
@@ -26,7 +26,7 @@ def get_user_role(
         environment: The target environment
 
     Returns:
-        role, team|environment: Return a tuple with the role string and the
+        userrole, team|environment: Return a tuple with the UserRole object and the
             Environment or Team that role came from
         None, None: Return a tuple filled with None if user was not part of the
             team and environment
@@ -43,7 +43,7 @@ def get_user_role(
         ).first()
     ) is None:
         return (
-            TeamUserRole.objects.get(user=user, team=environment.team).role,
+            TeamUserRole.objects.get(user=user, team=environment.team),
             environment.team,
         )
 
@@ -52,11 +52,11 @@ def get_user_role(
             user=user, team=environment.team
         ).first()
     ) is None:
-        return env_user_role.role, environment
+        return env_user_role, environment
 
     if Role[env_user_role.role] < Role[team_user_role.role]:
-        return team_user_role.role, environment.team
-    return env_user_role.role, environment
+        return team_user_role, environment.team
+    return env_user_role, environment
 
 
 def get_users(env: Environment) -> list[dict]:
@@ -83,9 +83,15 @@ def get_users(env: Environment) -> list[dict]:
     for user in all_users:
         user_elements = {}
         role, origin = get_user_role(user, env)
+        environment_user_role = EnvironmentUserRole.objects.filter(
+            environment=env, user=user
+        ).first()
         user_elements["user"] = user
-        user_elements["role"] = role
+        user_elements["role"] = role.role
         user_elements["origin"] = origin.name
+        user_elements["environment_user_role_id"] = (
+            environment_user_role.id if environment_user_role else None
+        )
         users.append(user_elements)
 
     # Sort users by their username in ascending order
@@ -125,3 +131,19 @@ def get_team_members(
     """
     members: list[User] = [user.user for user in env.team.user_roles.all()]
     return members
+
+
+def get_user_from_userid(user_id: str) -> Union[User, None]:
+    """Simple helper method for getting a User from the user id
+
+    Retrieve a User object from the given userid if it exists.
+    If a User does not exist with the given username, returns None.
+
+    Args:
+        username: A string of the user id
+
+    Returns:
+        User or None: Returns the corresponding User object if a user
+            with that id exists. Else, returns None
+    """
+    return User.objects.filter(id=user_id).first()

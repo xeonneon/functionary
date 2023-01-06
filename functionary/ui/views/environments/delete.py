@@ -1,23 +1,20 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
-from django.views.generic import View
+from django.urls import reverse
+from django.views.generic.edit import DeleteView
 
 from core.auth import Permission
-from core.models import Environment, EnvironmentUserRole, User
+from core.models import Environment, EnvironmentUserRole
 
 
-class EnvironmentDeleteMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def delete(self, request: HttpRequest, environment_id: str, user_id: str):
-        environment = get_object_or_404(Environment, id=environment_id)
-        user = get_object_or_404(User, id=user_id)
-        http_reponse = HttpResponse()
-        http_reponse.headers["HX-Refresh"] = "true"
+class EnvironmentDeleteMemberView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = EnvironmentUserRole
 
-        _ = EnvironmentUserRole.objects.filter(
-            user=user, environment=environment
-        ).delete()
-        return http_reponse
+    def get_success_url(self) -> str:
+        environment_user_role: EnvironmentUserRole = self.get_object()
+        return reverse(
+            "ui:environment-detail", kwargs={"pk": environment_user_role.environment.id}
+        )
 
     def test_func(self) -> bool:
         environment = get_object_or_404(Environment, id=self.kwargs["environment_id"])

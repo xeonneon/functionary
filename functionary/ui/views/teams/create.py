@@ -1,79 +1,54 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.core.exceptions import ValidationError
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, QueryDict
+from django.http import HttpRequest, HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET
-from django.views.generic import View
+from django.views.generic import CreateView
 from rapidfuzz import process
 
 from core.auth import Permission
 from core.models import Team, TeamUserRole, User
 from ui.forms.teams import TeamUserRoleForm
+from ui.views.teams.utils import get_user_from_username
 
 
-class TeamCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def get(self, request: HttpRequest, team_id: str):
-        team = get_object_or_404(Team, id=team_id)
+class TeamCreateMemberView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = TeamUserRole
+    form_class = TeamUserRoleForm
+    template_name = "forms/teamuserrole_create_or_update.html"
 
-        form = TeamUserRoleForm()
-        context = {
-            "form": form,
-            "team_id": str(team.id),
-            "create_user": True,
-            "usernames": [user.username for user in User.objects.all()[:5]],
-        }
-        return render(request, "forms/teamuserrole_create_or_update.html", context)
+    def get_context_data(self, **kwargs) -> dict:
+        context = super().get_context_data(**kwargs)
+        team = get_object_or_404(Team, id=self.kwargs.get("team_id"))
+
+        # Use string of id field if it is a UUID
+        context["team_id"] = str(team.id)
+        context["create_user"] = True
+        context["usernames"] = User.objects.all()[:5]
+        return context
+
+    def get_success_url(self, **kwargs) -> str:
+        team = get_object_or_404(Team, id=self.kwargs.get("team_id"))
+        return reverse("ui:team-detail", kwargs={"pk": team.id})
 
     def post(self, request: HttpRequest, team_id: str):
-        """Add user to team"""
-        team = get_object_or_404(Team, id=team_id)
-
+        """
+        Substitute user object for user field since the ModelForm clean method
+        will invalidate the user field before calling the additional
+        clean_<field> methods. This overriding should only be necessary for create
+        endpoints, due to how the fuzzy find for users works.
+        """
         data: QueryDict = request.POST.copy()
-        user = User.objects.filter(username=data["user"]).first()
-        data["team"] = team
-        data["user"] = user
-
-        form = TeamUserRoleForm(data=data)
+        data["user"] = get_user_from_username(data.get("user"))
 
         """
-        This endpoint is for adding a user to the team,
-        not updating a user's role on the team
+        Replace the request.POST.data with our updated QueryDict. This is the only way
+        to re-use the CreateView's POST method without needing to override the
+        whole method.
         """
-        if (_ := TeamUserRole.objects.filter(team=team, user=user).first()) is not None:
-            form.add_error(
-                "user",
-                ValidationError(
-                    "User already has a role on this team.", code="invalid"
-                ),
-            )
-            context = {
-                "form": form,
-                "team_id": str(team.id),
-                "create_user": True,
-                "usernames": [user.username for user in User.objects.all()[:5]],
-            }
-            return render(request, "forms/teamuserrole_create_or_update.html", context)
-
-        if not form.is_valid():
-            if user is None:
-                form.add_error(
-                    "user",
-                    ValidationError("User not found.", code="invalid"),
-                )
-
-            context = {
-                "form": form,
-                "team_id": str(team.id),
-                "create_user": True,
-                "usernames": [user.username for user in User.objects.all()[:5]],
-            }
-            return render(request, "forms/teamuserrole_create_or_update.html", context)
-
-        form.save()
-
-        return HttpResponseRedirect(reverse("ui:team-detail", kwargs={"pk": team.id}))
+        request.POST = data
+        return super().post(data, team_id)
 
     def test_func(self) -> bool:
         team = get_object_or_404(Team, id=self.kwargs["team_id"])

@@ -179,12 +179,17 @@ environment_urlpatterns = [
         name="create-environment-member",
     ),
     path(
-        "environment/<environment_id>/delete/<user_id>",
+        "environment/<environment_id>/create/<user_id>",
+        (environments.EnvironmentCreateMemberView.as_view()),
+        name="create-environment-member",
+    ),
+    path(
+        "environment/<environment_id>/delete/<pk>",
         (environments.EnvironmentDeleteMemberView.as_view()),
         name="delete-environment-member",
     ),
     path(
-        "environment/<environment_id>/update/<user_id>",
+        "environment/<environment_id>/update/<pk>",
         (environments.EnvironmentUpdateMemberView.as_view()),
         name="update-environment-member",
     ),
@@ -203,12 +208,12 @@ team_urlpatterns = [
         name="create-team-member",
     ),
     path(
-        "team/<team_id>/delete/<user_id>",
+        "team/<team_id>/delete/<pk>",
         (teams.TeamDeleteMemberView.as_view()),
         name="delete-team-member",
     ),
     path(
-        "team/<team_id>/update/<user_id>",
+        "team/<team_id>/update/<pk>",
         (teams.TeamUpdateMemberView.as_view()),
         name="update-team-member",
     ),

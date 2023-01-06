@@ -1,73 +1,48 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, QueryDict
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from django.views.generic import View
 from django.views.generic.base import TemplateView
+from django.views.generic.edit import UpdateView
 from django_htmx import http
 
 from core.auth import Permission
-from core.models import Environment, EnvironmentUserRole, User
+from core.models import Environment, EnvironmentUserRole
 from ui.forms.environments import EnvUserRoleForm
 
 from .utils import get_user_role
 
 
-class EnvironmentUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def get(self, request: HttpRequest, environment_id: str, user_id: str):
-        environment = get_object_or_404(Environment, id=environment_id)
-        user = get_object_or_404(User, id=user_id)
-        env_user_role = get_user_role(user, environment)
+class EnvironmentUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = EnvironmentUserRole
+    form_class = EnvUserRoleForm
+    template_name = "forms/environmentuserrole_create_or_update.html"
 
-        form = EnvUserRoleForm(initial={"user": user, "role": env_user_role[0]})
-        context = {
-            "form": form,
-            "environment_id": str(environment.id),
-            "user_id": str(user.id),
-            "username": user.username,
-        }
-        return render(
-            request, "forms/environmentuserrole_create_or_update.html", context
+    def get_context_data(self, **kwargs) -> dict:
+        context = super().get_context_data(**kwargs)
+        environment_user_role: EnvironmentUserRole = self.get_object()
+
+        # Use string of id field if it is a UUID
+        context["environment_id"] = str(environment_user_role.environment.id)
+        context["environment_user_role_id"] = environment_user_role.id
+        context["username"] = environment_user_role.user.username
+        context["user_id"] = environment_user_role.user.id
+        return context
+
+    def get_success_url(self) -> str:
+        environment_user_role: EnvironmentUserRole = self.get_object()
+        return reverse(
+            "ui:environment-detail", kwargs={"pk": environment_user_role.environment.id}
         )
 
-    def post(self, request: HttpRequest, environment_id: str, user_id: str):
-        """Update users role in the environment"""
-        environment = get_object_or_404(Environment, id=environment_id)
-        user = get_object_or_404(User, id=user_id)
-        env_user_role = EnvironmentUserRole.objects.filter(
-            environment=environment, user=user
-        ).first()
-        user_role = get_user_role(user, environment)
-
-        data: QueryDict = request.POST.copy()
-        data["environment"] = environment
-        data["user"] = user
-
-        form = EnvUserRoleForm(data=data, instance=env_user_role)
-        if not form.is_valid():
-            context = {
-                "form": form,
-                "environment_id": str(environment.id),
-                "user_id": str(user.id),
-                "username": user.username,
-            }
-            return (
-                render(
-                    request, "forms/environmentuserrole_create_or_update.html", context
-                ),
-            )
-
-        # If user's role did not change, skip the update or create query
-        if form.cleaned_data["role"] == user_role[0]:
-            return HttpResponseRedirect(
-                reverse("ui:environment-detail", kwargs={"pk": environment.id})
-            )
-
-        form.save()
-
-        return HttpResponseRedirect(
-            reverse("ui:environment-detail", kwargs={"pk": environment.id})
+    def get_initial(self) -> dict:
+        environment_user_role: EnvironmentUserRole = self.get_object()
+        initial = super().get_initial()
+        role, _ = get_user_role(
+            environment_user_role.user, environment_user_role.environment
         )
+        initial["role"] = role.role if role else initial["role"]
+        return initial
 
     def test_func(self) -> bool:
         environment = get_object_or_404(Environment, id=self.kwargs["environment_id"])

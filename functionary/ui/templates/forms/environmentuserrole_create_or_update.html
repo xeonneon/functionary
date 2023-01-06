@@ -1,26 +1,42 @@
 {% extends "partials/modal.html" %}
 
+
 {% block modal_title %}
-Add User
-{% endblock%}
+    {% if create_user %}
+        Add User
+    {% else %}
+        Update User's Role
+    {% endif %}
+{% endblock %}
 
 {% block modal_description %}
-Add user to the environment.
+    {% if create_user %}
+        Add user to the environment.
+    {% else %}
+        Update user's role for the environment
+    {% endif %}
 {% endblock %}
 
 {% block form_declaration %}
     {% if create_user %}
         <form hx-post="{% url 'ui:create-environment-member' environment_id %}" method="post" hx-swap="outerHTML" hx-target="#form-modal">
+    {% elif create_user_from_team %}
+        <form hx-post="{% url 'ui:create-environment-member' environment_id user_id %}" method="post" hx-swap="outerHTML" hx-target="#form-modal">
     {% else %}
-        <form hx-post="{% url 'ui:update-environment-member' environment_id user_id %}" method="post" hx-swap="outerHTML" hx-target="#form-modal">
+        <form hx-post="{% url 'ui:update-environment-member' environment_id environment_user_role_id %}" method="post" hx-swap="outerHTML" hx-target="#form-modal">
     {% endif %}
 {% endblock %}
 
 {% block modal_content %}
 {% csrf_token %}
 <div class="columns is-multiline">
+    {% if form.non_field_errors %}
+    <div class="ml-3">
+        {{ form.non_field_errors }}
+    </div>
+    {% endif %} 
     <div class="field column is-half">
-        {% if create_user %}
+        {% if create_user and not create_user_from_team %}
             <label class="{% if form.user.errors %}errors{% endif %} label" for="user">User:</label>
             <input class="input is-medium" name="user" id="user" list="user-list"
             hx-get="{% url 'ui:get-users' %}"
@@ -31,7 +47,9 @@ Add user to the environment.
         {% else %}
             <label class="label" for="username-field">User:</label>
             <input id="username-field" class="input is-medium" disabled placeholder="{{ username }}"/>
+            <input type="hidden" name="user" value="{{ user_id }}"/>
         {% endif %}
+        <input type="hidden" name="environment" value="{{ environment_id }}"/>
         {{ form.user.errors }}
     </div>
     <div class="field column">
@@ -44,7 +62,7 @@ Add user to the environment.
 {% endblock %}
  
 {% block modal_footer %}
-    {% if create_user %}
+    {% if create_user and not create_user_from_team %}
         <button class="button is-link is-medium" type="submit" value="Add User">Add User</button>
     {% else %}
         <button class="button is-link is-medium" type="submit" value="Update Role">Update Role</button>
