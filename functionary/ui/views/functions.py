@@ -1,6 +1,13 @@
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
-from django.shortcuts import render
+from django.core.exceptions import ValidationError
+from django.http import (
+    HttpRequest,
+    HttpResponse,
+    HttpResponseForbidden,
+    HttpResponseRedirect,
+    QueryDict,
+)
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
@@ -56,28 +63,43 @@ class FunctionDetailView(PermissionedEnvironmentDetailView):
 
 @require_POST
 @login_required
-def execute(request) -> HttpResponse:
+def execute(request: HttpRequest) -> HttpResponse:
     func = None
     form = None
 
     env = Environment.objects.get(id=request.session.get("environment_id"))
-    if request.user.has_perm(Permission.TASK_CREATE, env):
-        func = Function.objects.get(id=request.POST["function_id"])
-        form = TaskParameterForm(func, request.POST)
+    if not request.user.has_perm(Permission.TASK_CREATE, env):
+        return HttpResponseForbidden()
 
-        if form.is_valid():
+    data: QueryDict = request.POST.copy()
+    func = get_object_or_404(Function, id=data.get("function_id"))
+    form = TaskParameterForm(func, data)
+
+    if form.is_valid():
+
+        # Clean the task fields before saving the Task
+        try:
             # Create the new Task, the validated parameters are in form.cleaned_data
-            task = Task.objects.create(
+            task = Task(
                 environment=env,
                 creator=request.user,
                 function=func,
                 parameters=form.cleaned_data,
                 return_type=func.return_type,
             )
+            task.clean()
+            task.save()
 
-            # redirect to a new URL:
+            # Redirect to the newly created task:
             return HttpResponseRedirect(reverse("ui:task-detail", args=(task.id,)))
-        args = {"form": form, "function": func}
-        return render(request, "core/function_detail.html", args)
+        except ValidationError:
+            form.add_error(
+                None,
+                ValidationError(
+                    "The given parameters do not conform to function schema.",
+                    code="invalid",
+                ),
+            )
 
-    return HttpResponseForbidden()
+    args = {"form": form, "function": func}
+    return render(request, "core/function_detail.html", args)

@@ -121,8 +121,8 @@ def _format_result(result, format):
     return output_format, format_error, formatted_result
 
 
-def _get_result_context(context, format):
-    task = context["task"]
+def _get_result_context(context: dict, format: str) -> dict:
+    task: Task = context["task"]
 
     completed = task.status in FINISHED_STATUS
 

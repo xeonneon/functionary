@@ -141,6 +141,11 @@ htmx_urlpatterns = [
         name="new-schedule",
     ),
     path(
+        "create_schedule/",
+        (scheduling.create_scheduled_task),
+        name="create-schedule",
+    ),
+    path(
         "update_schedule/<uuid:pk>",
         (scheduling.update_scheduled_task),
         name="update-schedule",

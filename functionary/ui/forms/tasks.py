@@ -1,4 +1,3 @@
-import json
 from typing import Tuple, Type
 
 from django.forms import (
@@ -14,6 +13,8 @@ from django.forms import (
     Textarea,
 )
 from django.forms.widgets import DateInput, DateTimeInput, Widget
+
+from core.models import Function
 
 
 class HTMLDateInput(DateInput):
@@ -38,10 +39,8 @@ _field_mapping = {
     "json": (JSONField, Textarea),
 }
 
-_transform_initial_mapping = {"json": json.loads}
 
-
-def _get_param_type(param_dict):
+def _get_param_type(param_dict: dict) -> str:
     """Finds the type of the parameter from the definition in the schema.
 
     Pydantic maps to python types correctly, but we want to use the actual
@@ -69,22 +68,6 @@ def _get_param_type(param_dict):
         return param_dict["type"]
 
 
-def _prepare_initial_value(param_type, initial):
-    """Convert the initial value to the appropriate type.
-
-    This function will massage the initial value as needed into the type
-    required for the parameter field. Currently, JSON types need to be
-    converted from a string into an object, otherwise display issues
-    occur in the form.
-    """
-    if initial:
-        if param_type in _transform_initial_mapping:
-            return _transform_initial_mapping[param_type](initial)
-        else:
-            return initial
-    return None
-
-
 class TaskParameterForm(Form):
     """Form for providing task parameter input.
 
@@ -102,7 +85,13 @@ class TaskParameterForm(Form):
 
     template_name = "forms/task_parameters.html"
 
-    def __init__(self, function, data=None, initial=None, prefix="task-parameter"):
+    def __init__(
+        self,
+        function: Function,
+        data: dict = None,
+        initial: dict = None,
+        prefix: str = "task-parameter",
+    ):
         super().__init__(data=data, prefix=prefix)
 
         if initial is None:
@@ -122,7 +111,7 @@ class TaskParameterForm(Form):
             kwargs = {
                 "label": value["title"],
                 "label_suffix": param_type,
-                "initial": _prepare_initial_value(param_type, initial_value),
+                "initial": initial_value,
                 "required": req,
                 "help_text": value.get("description", None),
             }

@@ -122,6 +122,9 @@ def create_scheduled_task(request: HttpRequest) -> HttpResponse:
     if function_params_form.is_valid():
         data["parameters"] = function_params_form.cleaned_data
     else:
+        # TODO: Refactor this. Just re-render the task param form instead
+        # of setting a param_errors variable
+        data["parameters"] = function_params_form.cleaned_data
         param_errors = function_params_form.errors
 
     form = ScheduledTaskForm(data=data, env=env)
@@ -132,7 +135,8 @@ def create_scheduled_task(request: HttpRequest) -> HttpResponse:
         return HttpResponseRedirect(reverse("ui:schedule-list"))
 
     context = {
-        "form": ScheduledTaskForm(data=data, env=env),
+        "form": form,
+        "parameter_form": function_params_form,
         "errors": form.errors,
         "param_errors": param_errors,
         "function_id": str(function.id),
@@ -209,7 +213,9 @@ def function_parameters(request: HttpRequest) -> HttpResponse:
     # widget values for the existing ScheduledTask parameters.
     existing_parameters = None
     if (scheduled_task_id := request.GET.get("scheduled_task_id", None)) is not None:
-        scheduled_task = ScheduledTask.objects.get(id=scheduled_task_id)
+        scheduled_task: ScheduledTask = get_object_or_404(
+            ScheduledTask, id=scheduled_task_id
+        )
         existing_parameters = scheduled_task.parameters
 
     form = TaskParameterForm(function=function, initial=existing_parameters)
@@ -269,7 +275,7 @@ def _create_scheduled_task(
 ):
     """Helper function for creating scheduled task"""
     with transaction.atomic():
-        scheduled_task = ScheduledTask.objects.create(
+        scheduled_task = ScheduledTask(
             name=schedule_form_data["name"],
             environment=schedule_form_data["environment"],
             description=schedule_form_data["description"],
@@ -277,6 +283,10 @@ def _create_scheduled_task(
             parameters=task_params,
             creator=request.user,
         )
+        # Don't need try/except here since all fields would have been validated during
+        # the <model>form.is_valid()
+        scheduled_task.clean()
+        scheduled_task.save()
         crontab_schedule = _get_crontab_schedule(schedule_form_data)
         scheduled_task.set_schedule(crontab_schedule)
         scheduled_task.activate()
