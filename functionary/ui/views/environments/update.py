@@ -1,5 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import HttpResponse
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.generic.base import TemplateView
@@ -8,31 +8,21 @@ from django_htmx import http
 
 from core.auth import Permission
 from core.models import Environment, EnvironmentUserRole
-from ui.forms.environments import EnvUserRoleForm
+from ui.forms.environments import EnvironmentUserRoleForm
 
 from .utils import get_user_role
 
 
-class EnvironmentUpdateMemberView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class EnvironmentUserRoleUpdateView(
+    LoginRequiredMixin, UserPassesTestMixin, UpdateView
+):
     model = EnvironmentUserRole
-    form_class = EnvUserRoleForm
-    template_name = "forms/environmentuserrole_create_or_update.html"
-
-    def get_context_data(self, **kwargs) -> dict:
-        context = super().get_context_data(**kwargs)
-        environment_user_role: EnvironmentUserRole = self.get_object()
-
-        # Use string of id field if it is a UUID
-        context["environment_id"] = str(environment_user_role.environment.id)
-        context["environment_user_role_id"] = environment_user_role.id
-        context["username"] = environment_user_role.user.username
-        context["user_id"] = environment_user_role.user.id
-        return context
+    form_class = EnvironmentUserRoleForm
+    template_name = "forms/environment/environmentuserrole_update.html"
 
     def get_success_url(self) -> str:
-        environment_user_role: EnvironmentUserRole = self.get_object()
         return reverse(
-            "ui:environment-detail", kwargs={"pk": environment_user_role.environment.id}
+            "ui:environment-detail", kwargs={"pk": self.kwargs.get("environment_id")}
         )
 
     def get_initial(self) -> dict:
@@ -57,7 +47,7 @@ class EnvironmentSelectView(LoginRequiredMixin, TemplateView):
         context["environments"] = self.environments
         return context
 
-    def post(self, request):
+    def post(self, request: HttpRequest):
         pk = request.POST["environment_id"]
         get_object_or_404(Environment, id=pk)
 
@@ -67,7 +57,7 @@ class EnvironmentSelectView(LoginRequiredMixin, TemplateView):
             next = "/ui/"
         return http.trigger_client_event(HttpResponse(""), "reloadData")
 
-    def get(self, request):
+    def get(self, request: HttpRequest):
         if self.request.user.is_superuser:
             envs = (
                 Environment.objects.select_related("team")

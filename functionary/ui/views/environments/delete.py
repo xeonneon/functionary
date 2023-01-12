@@ -7,7 +7,9 @@ from core.auth import Permission
 from core.models import Environment, EnvironmentUserRole
 
 
-class EnvironmentDeleteMemberView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class EnvironmentUserRoleDeleteView(
+    LoginRequiredMixin, UserPassesTestMixin, DeleteView
+):
     model = EnvironmentUserRole
 
     def get_success_url(self) -> str:

@@ -1,5 +1,5 @@
 <div id="user-list-block">
-    {% if not usernames|length %}
+    {% if not usernames|length and username|length %}
     <ul class="errorlist">
         <li>User not found.</li>
     </ul>

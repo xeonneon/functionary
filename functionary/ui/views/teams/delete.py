@@ -7,12 +7,11 @@ from core.auth import Permission
 from core.models import Team, TeamUserRole
 
 
-class TeamDeleteMemberView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class TeamUserRoleDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = TeamUserRole
 
     def get_success_url(self) -> str:
-        team_user_role: TeamUserRole = self.get_object()
-        return reverse("ui:team-detail", kwargs={"pk": team_user_role.team.id})
+        return reverse("ui:team-detail", kwargs={"pk": self.kwargs.get("team_id")})
 
     def test_func(self) -> bool:
         team = get_object_or_404(Team, id=self.kwargs["team_id"])

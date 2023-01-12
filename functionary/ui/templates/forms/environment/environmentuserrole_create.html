@@ -2,29 +2,15 @@
 
 
 {% block modal_title %}
-    {% if create_user %}
-        Add User
-    {% else %}
-        Update User's Role
-    {% endif %}
+    Add User
 {% endblock %}
 
 {% block modal_description %}
-    {% if create_user %}
-        Add user to the environment.
-    {% else %}
-        Update user's role for the environment
-    {% endif %}
+    Assign role to user for this environment.
 {% endblock %}
 
 {% block form_declaration %}
-    {% if create_user %}
-        <form hx-post="{% url 'ui:create-environment-member' environment_id %}" method="post" hx-swap="outerHTML" hx-target="#form-modal">
-    {% elif create_user_from_team %}
-        <form hx-post="{% url 'ui:create-environment-member' environment_id user_id %}" method="post" hx-swap="outerHTML" hx-target="#form-modal">
-    {% else %}
-        <form hx-post="{% url 'ui:update-environment-member' environment_id environment_user_role_id %}" method="post" hx-swap="outerHTML" hx-target="#form-modal">
-    {% endif %}
+    <form hx-post="{% url 'ui:create-environment-member' environment_id %}" method="post" hx-swap="outerHTML" hx-target="#form-modal">
 {% endblock %}
 
 {% block modal_content %}
@@ -36,7 +22,7 @@
     </div>
     {% endif %} 
     <div class="field column is-half">
-        {% if create_user and not create_user_from_team %}
+        {% if not username %}
             <label class="{% if form.user.errors %}errors{% endif %} label" for="user">User:</label>
             <input class="input is-medium" name="user" id="user" list="user-list"
             hx-get="{% url 'ui:get-users' %}"
@@ -46,8 +32,9 @@
             {% include "partials/teams/user_list.html" with usernames=usernames %}
         {% else %}
             <label class="label" for="username-field">User:</label>
-            <input id="username-field" class="input is-medium" disabled placeholder="{{ username }}"/>
-            <input type="hidden" name="user" value="{{ user_id }}"/>
+            <input class="input is-medium" name="username-field" disabled placeholder="{{ username }}" />
+            {% comment %} Username value needs to be in this hidden field, not in the above disabled field {% endcomment %}
+            <input type="hidden" name="user" value="{{ username }}"/>
         {% endif %}
         <input type="hidden" name="environment" value="{{ environment_id }}"/>
         {{ form.user.errors }}
@@ -62,11 +49,7 @@
 {% endblock %}
  
 {% block modal_footer %}
-    {% if create_user and not create_user_from_team %}
-        <button class="button is-link is-medium" type="submit" value="Add User">Add User</button>
-    {% else %}
-        <button class="button is-link is-medium" type="submit" value="Update Role">Update Role</button>
-    {% endif %}
+    <button class="button is-link is-medium" type="submit" value="Add User">Add User</button>
 {% endblock %}
 
 {% block form_end %}

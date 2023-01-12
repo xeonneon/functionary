@@ -174,23 +174,18 @@ environment_urlpatterns = [
         name="set-environment",
     ),
     path(
-        "environment/<environment_id>/create",
-        (environments.EnvironmentCreateMemberView.as_view()),
+        "environment/<uuid:environment_id>/user_role/create",
+        (environments.EnvironmentUserRoleCreateView.as_view()),
         name="create-environment-member",
     ),
     path(
-        "environment/<environment_id>/create/<user_id>",
-        (environments.EnvironmentCreateMemberView.as_view()),
-        name="create-environment-member",
-    ),
-    path(
-        "environment/<environment_id>/delete/<pk>",
-        (environments.EnvironmentDeleteMemberView.as_view()),
+        "environment/<uuid:environment_id>/user_role/<int:pk>/delete",
+        (environments.EnvironmentUserRoleDeleteView.as_view()),
         name="delete-environment-member",
     ),
     path(
-        "environment/<environment_id>/update/<pk>",
-        (environments.EnvironmentUpdateMemberView.as_view()),
+        "environment/<uuid:environment_id>/user_role/<int:pk>/update",
+        (environments.EnvironmentUserRoleUpdateView.as_view()),
         name="update-environment-member",
     ),
 ]
@@ -204,17 +199,17 @@ team_urlpatterns = [
     ),
     path(
         "team/<team_id>/create",
-        (teams.TeamCreateMemberView.as_view()),
+        (teams.TeamUserRoleCreateView.as_view()),
         name="create-team-member",
     ),
     path(
         "team/<team_id>/delete/<pk>",
-        (teams.TeamDeleteMemberView.as_view()),
+        (teams.TeamUserRoleDeleteView.as_view()),
         name="delete-team-member",
     ),
     path(
         "team/<team_id>/update/<pk>",
-        (teams.TeamUpdateMemberView.as_view()),
+        (teams.TeamUserRoleUpdateView.as_view()),
         name="update-team-member",
     ),
     path("users/", (teams.get_users), name="get-users"),

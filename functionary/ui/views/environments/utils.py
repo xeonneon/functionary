@@ -6,7 +6,9 @@ from core.models import Environment, EnvironmentUserRole, Team, TeamUserRole, Us
 
 def get_user_role(
     user: User, environment: Environment
-) -> tuple[Union[EnvironmentUserRole, TeamUserRole], Union[Environment, Team]]:
+) -> tuple[
+    Union[EnvironmentUserRole, TeamUserRole, None], Union[Environment, Team, None]
+]:
     """Get the effective role of the user with respect to the Environment and Team
 
     This function returns the effective UserRole the user has within an environment,

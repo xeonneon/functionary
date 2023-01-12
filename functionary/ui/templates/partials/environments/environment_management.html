@@ -36,7 +36,8 @@
                         </button>
                     {% else %}
                         <button class="button is-small has-text-link is-white singletonActive"
-                                hx-get="{% url 'ui:create-environment-member' environment_id u.user.id %}"
+                                hx-get="{% url 'ui:create-environment-member' environment_id %}"
+                                hx-vals='{"user_id": "{{ u.user.id }}"}'
                                 hx-target="#update-modal">
                             <span class="fa fa-pencil-alt"></span>
                         </button>
