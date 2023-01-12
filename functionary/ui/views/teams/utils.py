@@ -1,6 +1,4 @@
-from typing import Union
-
-from core.models import Team, TeamUserRole, User
+from core.models import Team, TeamUserRole
 
 
 def get_users(team: Team) -> list[dict]:
