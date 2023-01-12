@@ -133,19 +133,3 @@ def get_team_members(
     """
     members: list[User] = [user.user for user in env.team.user_roles.all()]
     return members
-
-
-def get_user_from_userid(user_id: str) -> Union[User, None]:
-    """Simple helper method for getting a User from the user id
-
-    Retrieve a User object from the given userid if it exists.
-    If a User does not exist with the given username, returns None.
-
-    Args:
-        username: A string of the user id
-
-    Returns:
-        User or None: Returns the corresponding User object if a user
-            with that id exists. Else, returns None
-    """
-    return User.objects.filter(id=user_id).first()
