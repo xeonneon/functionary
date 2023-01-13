@@ -273,9 +273,13 @@ def crontab_month_of_year_param(request: HttpRequest) -> HttpResponse:
 def _create_scheduled_task(
     request: HttpRequest, schedule_form_data: dict, task_params: dict
 ):
-    """Helper function for creating scheduled task"""
+    """Helper function for creating scheduled task
+
+    By this point, the parameters have been validated against the schema,
+    and the fields have been validated, so we can just create the object.
+    """
     with transaction.atomic():
-        scheduled_task = ScheduledTask(
+        scheduled_task = ScheduledTask.objects.create(
             name=schedule_form_data["name"],
             environment=schedule_form_data["environment"],
             description=schedule_form_data["description"],
@@ -283,10 +287,6 @@ def _create_scheduled_task(
             parameters=task_params,
             creator=request.user,
         )
-        # Don't need try/except here since all fields would have been validated during
-        # the <model>form.is_valid()
-        scheduled_task.clean()
-        scheduled_task.save()
         crontab_schedule = _get_crontab_schedule(schedule_form_data)
         scheduled_task.set_schedule(crontab_schedule)
         scheduled_task.activate()

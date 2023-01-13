@@ -1,4 +1,5 @@
-from typing import Tuple, Type
+import json
+from typing import Tuple, Type, Union
 
 from django.forms import (
     BooleanField,
@@ -40,6 +41,15 @@ _field_mapping = {
 }
 
 
+def _transform_json(value: Union[str, dict]) -> Union[str, dict]:
+    if type(value) is str:
+        return json.loads(value)
+    return value
+
+
+_transform_initial_mapping = {"json": _transform_json}
+
+
 def _get_param_type(param_dict: dict) -> str:
     """Finds the type of the parameter from the definition in the schema.
 
@@ -66,6 +76,21 @@ def _get_param_type(param_dict: dict) -> str:
         )
     else:
         return param_dict["type"]
+
+
+def _prepare_initial_value(param_type: str, initial: dict) -> Union[dict, None]:
+    """Convert the initial value to the appropriate type.
+    This function will massage the initial value as needed into the type
+    required for the parameter field. Currently, JSON types need to be
+    converted from a string into an object, otherwise display issues
+    occur in the form.
+    """
+    if initial:
+        if param_type in _transform_initial_mapping:
+            return _transform_initial_mapping[param_type](initial)
+        else:
+            return initial
+    return None
 
 
 class TaskParameterForm(Form):
@@ -111,7 +136,7 @@ class TaskParameterForm(Form):
             kwargs = {
                 "label": value["title"],
                 "label_suffix": param_type,
-                "initial": initial_value,
+                "initial": _prepare_initial_value(param_type, initial_value),
                 "required": req,
                 "help_text": value.get("description", None),
             }

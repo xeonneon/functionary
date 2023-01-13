@@ -1,5 +1,5 @@
 from copy import deepcopy
-from json import JSONDecodeError, dumps, loads
+from json import JSONDecodeError, dumps
 
 # Place helper methods for serializing data that is used by the models in here
 # Don't import any models to prevent cyclic module dependencies
@@ -41,26 +41,23 @@ def serialize_parameters(parameters: dict, schema: dict) -> dict:
     try:
         for arg, param_type in schema["properties"].items():
             if union_type_param := param_type.get("anyOf"):
-                serialize_union_parameters(arg, union_type_param, parameters_copy)
+                _serialize_union_parameters(arg, union_type_param, parameters_copy)
             else:
-                if is_json_field(param_type):
+                if _is_json_field(param_type):
                     parameters_copy[arg] = dumps(parameters_copy[arg])
-                    # Validate the serialized JSON string is valid JSON
-                    _ = loads(parameters_copy[arg])
         return parameters_copy
     except JSONDecodeError as err:
         raise err
 
 
-def serialize_union_parameters(
+def _serialize_union_parameters(
     arg: str, union_type_param: dict, parameters: dict
 ) -> None:
     """Mutate given parameters dictionary to json stringify the parameters"""
     for param_type in union_type_param:
-        if is_json_field(param_type):
+        if _is_json_field(param_type):
             parameters[arg] = dumps(parameters[arg])
-            _ = loads(parameters[arg])
 
 
-def is_json_field(param: dict) -> bool:
+def _is_json_field(param: dict) -> bool:
     return "json-string" == param.get("format")
