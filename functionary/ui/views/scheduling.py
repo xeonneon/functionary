@@ -122,6 +122,9 @@ def create_scheduled_task(request: HttpRequest) -> HttpResponse:
     if function_params_form.is_valid():
         data["parameters"] = function_params_form.cleaned_data
     else:
+        # TODO: Refactor this. Just re-render the task param form instead
+        # of setting a param_errors variable
+        data["parameters"] = function_params_form.cleaned_data
         param_errors = function_params_form.errors
 
     form = ScheduledTaskForm(data=data, env=env)
@@ -132,7 +135,8 @@ def create_scheduled_task(request: HttpRequest) -> HttpResponse:
         return HttpResponseRedirect(reverse("ui:schedule-list"))
 
     context = {
-        "form": ScheduledTaskForm(data=data, env=env),
+        "form": form,
+        "parameter_form": function_params_form,
         "errors": form.errors,
         "param_errors": param_errors,
         "function_id": str(function.id),
@@ -209,7 +213,9 @@ def function_parameters(request: HttpRequest) -> HttpResponse:
     # widget values for the existing ScheduledTask parameters.
     existing_parameters = None
     if (scheduled_task_id := request.GET.get("scheduled_task_id", None)) is not None:
-        scheduled_task = ScheduledTask.objects.get(id=scheduled_task_id)
+        scheduled_task: ScheduledTask = get_object_or_404(
+            ScheduledTask, id=scheduled_task_id
+        )
         existing_parameters = scheduled_task.parameters
 
     form = TaskParameterForm(function=function, initial=existing_parameters)
@@ -267,7 +273,11 @@ def crontab_month_of_year_param(request: HttpRequest) -> HttpResponse:
 def _create_scheduled_task(
     request: HttpRequest, schedule_form_data: dict, task_params: dict
 ):
-    """Helper function for creating scheduled task"""
+    """Helper function for creating scheduled task
+
+    By this point, the parameters have been validated against the schema,
+    and the fields have been validated, so we can just create the object.
+    """
     with transaction.atomic():
         scheduled_task = ScheduledTask.objects.create(
             name=schedule_form_data["name"],

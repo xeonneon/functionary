@@ -1,5 +1,6 @@
 """ Scheduled Task model """
 import uuid
+from json import JSONDecodeError
 
 import jsonschema
 from django.conf import settings
@@ -9,6 +10,7 @@ from django.db import models
 from django_celery_beat.models import CrontabSchedule, PeriodicTask
 
 from core.models import ModelSaveHookMixin
+from core.utils.serialization import serialize_parameters
 
 
 class ScheduledTask(ModelSaveHookMixin, models.Model):
@@ -92,12 +94,15 @@ class ScheduledTask(ModelSaveHookMixin, models.Model):
     def _clean_parameters(self):
         """Validate that the parameters conform to the function's schema"""
         try:
+            parameters = serialize_parameters(self.parameters, self.function.schema)
             jsonschema.validate(
-                instance=self.parameters,
+                instance=parameters,
                 schema=self.function.schema,
             )
         except jsonschema.ValidationError as exc:
             raise ValidationError(exc.message)
+        except JSONDecodeError as err:
+            raise ValidationError(err.msg)
 
     def clean(self):
         """Model instance validation and attribute cleanup"""
