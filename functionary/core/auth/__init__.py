@@ -65,12 +65,20 @@ class Permission(Enum):
 
 
 class Role(Enum):
-    """Enum containing assignable roles"""
+    """Enum containing assignable roles in ascending order of privileges"""
 
-    ADMIN = "admin"
-    DEVELOPER = "developer"
-    OPERATOR = "operator"
     READ_ONLY = "read_only"
+    OPERATOR = "operator"
+    DEVELOPER = "developer"
+    ADMIN = "admin"
+
+    def __lt__(self, other: "Role") -> bool:
+        role_hierarchy = list(Role.__members__)
+        return role_hierarchy.index(self.name) < role_hierarchy.index(other.name)
+
+    def __gt__(self, other: "Role") -> bool:
+        role_hierarchy = list(Role.__members__)
+        return role_hierarchy.index(self.name) > role_hierarchy.index(other.name)
 
 
 # ADMIN gets all permissions
@@ -81,18 +89,18 @@ _READ_ONLY_PERMISSIONS = [
     permission.value for permission in Permission if ":read" in permission.value
 ]
 
-# Other roles get build on READ_ONLY
-_DEVELOPER_PERMISSIONS = _READ_ONLY_PERMISSIONS + [
-    Permission.PACKAGE_CREATE.value,
-    Permission.PACKAGE_UPDATE.value,
-]
-
-# TODO: Add permissions once Task model exists
+# Operators just handle tasking for a team and environment
 _OPERATOR_PERMISSIONS = _READ_ONLY_PERMISSIONS + [
     Permission.TASK_CREATE.value,
     Permission.WORKFLOW_CREATE.value,
     Permission.WORKFLOW_UPDATE.value,
     Permission.WORKFLOW_DELETE.value,
+]
+
+# Developer role includes Operator roles plus some additional development roles
+_DEVELOPER_PERMISSIONS = _OPERATOR_PERMISSIONS + [
+    Permission.PACKAGE_CREATE.value,
+    Permission.PACKAGE_UPDATE.value,
 ]
 
 ROLE_PERMISSION_MAP = {

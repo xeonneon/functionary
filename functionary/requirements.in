@@ -11,6 +11,7 @@ psycopg2
 pydantic
 pyyaml
 redis
+rapidfuzz
 
 # drf and optional dependencies
 djangorestframework

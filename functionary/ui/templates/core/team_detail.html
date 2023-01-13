@@ -37,11 +37,12 @@
                 </ul>
             </div>
             <div class="field">
+                {% if not team_create_perm %}
                 <label class="label" for="users">
                     <i class="fa fa-user"></i>&nbsp;Users:
                 </label>
                 <ul id="users">
-                    {% for u in users %}
+                    {% for u in user_details %}
                         <li class="block ml-4">
                             <p>
                                 {{ u.first_name }} {{ u.last_name }} <span class="has-text-grey-light">({{ u.username }})</span>
@@ -49,6 +50,9 @@
                         </li>
                     {% endfor %}
                 </ul>
+                {% else %}
+                    {% include "partials/teams/team_management.html" %}
+                {% endif %}
             </div>
             {% include 'partials/variables_section.html' with parent_object=team parent_id=team.id %}
         </div>
