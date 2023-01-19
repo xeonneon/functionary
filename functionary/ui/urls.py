@@ -9,7 +9,7 @@ from .views import (
     functions,
     home,
     packages,
-    scheduling,
+    schedules,
     tasks,
     teams,
     variables,
@@ -118,53 +118,33 @@ urlpatterns = [
 htmx_urlpatterns = [
     path(
         "crontab_minute_param/",
-        (scheduling.crontab_minute_param),
+        (schedules.crontab_minute_param),
         name="scheduled-minute-param",
     ),
     path(
         "crontab_hour_param/",
-        (scheduling.crontab_hour_param),
+        (schedules.crontab_hour_param),
         name="scheduled-hour-param",
     ),
     path(
         "crontab_day_of_week_param/",
-        (scheduling.crontab_day_of_week_param),
+        (schedules.crontab_day_of_week_param),
         name="scheduled-day-of-week-param",
     ),
     path(
         "crontab_day_of_month_param/",
-        (scheduling.crontab_day_of_month_param),
+        (schedules.crontab_day_of_month_param),
         name="scheduled-day-of-month-param",
     ),
     path(
         "crontab_month_of_year_param/",
-        (scheduling.crontab_month_of_year_param),
+        (schedules.crontab_month_of_year_param),
         name="scheduled-month-of-year-param",
     ),
     path(
-        "new_schedule/",
-        (scheduling.ScheduledTaskCreateView.as_view()),
-        name="new-schedule",
-    ),
-    path(
-        "create_schedule/",
-        (scheduling.create_scheduled_task),
-        name="create-schedule",
-    ),
-    path(
-        "update_schedule/<uuid:pk>",
-        (scheduling.update_scheduled_task),
-        name="update-schedule",
-    ),
-    path(
-        "schedule/<uuid:pk>",
-        (scheduling.ScheduledTaskUpdateView.as_view()),
-        name="schedule-detail",
-    ),
-    path(
-        "schedule_list/",
-        (scheduling.ScheduledTaskListView.as_view()),
-        name="schedule-list",
+        "function_parameters/",
+        (schedules.function_parameters),
+        name="function-parameters",
     ),
 ]
 
@@ -193,6 +173,29 @@ environment_urlpatterns = [
         "environment/<uuid:environment_id>/user_role/<int:pk>/update",
         (environments.EnvironmentUserRoleUpdateView.as_view()),
         name="update-environment-member",
+    ),
+]
+
+scheduling_urlpatterns = [
+    path(
+        "create_schedule/",
+        (schedules.ScheduledTaskCreateView.as_view()),
+        name="create-schedule",
+    ),
+    path(
+        "schedule/<uuid:pk>",
+        (schedules.ScheduledTaskDetailView.as_view()),
+        name="detail-schedule",
+    ),
+    path(
+        "schedule/<uuid:pk>/update",
+        (schedules.ScheduledTaskUpdateView.as_view()),
+        name="update-schedule",
+    ),
+    path(
+        "schedule_list/",
+        (schedules.ScheduledTaskListView.as_view()),
+        name="schedule-list",
     ),
 ]
 
@@ -291,5 +294,7 @@ teams, environments, schedules, tasks, etc.
 
 """
 urlpatterns += environment_urlpatterns
+urlpatterns += htmx_urlpatterns
+urlpatterns += scheduling_urlpatterns
 urlpatterns += team_urlpatterns
-urlpatterns += htmx_urlpatterns + workflows_urlpatterns
+urlpatterns += workflows_urlpatterns

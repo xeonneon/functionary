@@ -1,6 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import CreateView, UpdateView
 from django.views.generic.detail import DetailView
+from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.list import ListView
 
 from core.auth import Permission
@@ -54,10 +54,10 @@ class PermissionedEnvironmentDetailView(
 class PermissionedFormCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     def test_func(self):
         env = self.request.session.get("environment_id")
-        return self.request.user.has_perm(Permission.ENVIRONMENT_READ, env)
+        return self.request.user.has_perm(Permission.ENVIRONMENT_CREATE, env)
 
 
 class PermissionedFormUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def test_func(self):
         env = self.request.session.get("environment_id")
-        return self.request.user.has_perm(Permission.ENVIRONMENT_READ, env)
+        return self.request.user.has_perm(Permission.ENVIRONMENT_CREATE, env)
