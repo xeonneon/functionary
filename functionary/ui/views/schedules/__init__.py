@@ -1,5 +1,5 @@
 from .create import ScheduledTaskCreateView  # noqa
-from .detail import ScheduledTaskDetailView, function_parameters  # noqa
+from .detail import ScheduledTaskDetailView  # noqa
 from .list import ScheduledTaskListView  # noqa
 from .update import ScheduledTaskUpdateView  # noqa
 from .validators import crontab_day_of_month_param  # noqa

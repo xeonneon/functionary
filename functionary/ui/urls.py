@@ -115,39 +115,6 @@ urlpatterns = [
     ),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
-htmx_urlpatterns = [
-    path(
-        "crontab_minute_param/",
-        (schedules.crontab_minute_param),
-        name="scheduled-minute-param",
-    ),
-    path(
-        "crontab_hour_param/",
-        (schedules.crontab_hour_param),
-        name="scheduled-hour-param",
-    ),
-    path(
-        "crontab_day_of_week_param/",
-        (schedules.crontab_day_of_week_param),
-        name="scheduled-day-of-week-param",
-    ),
-    path(
-        "crontab_day_of_month_param/",
-        (schedules.crontab_day_of_month_param),
-        name="scheduled-day-of-month-param",
-    ),
-    path(
-        "crontab_month_of_year_param/",
-        (schedules.crontab_month_of_year_param),
-        name="scheduled-month-of-year-param",
-    ),
-    path(
-        "function_parameters/",
-        (schedules.function_parameters),
-        name="function-parameters",
-    ),
-]
-
 environment_urlpatterns = [
     path(
         "environment/<uuid:pk>",
@@ -197,6 +164,31 @@ scheduling_urlpatterns = [
         (schedules.ScheduledTaskListView.as_view()),
         name="schedule-list",
     ),
+    path(
+        "crontab_minute_param/",
+        (schedules.crontab_minute_param),
+        name="scheduled-minute-param",
+    ),
+    path(
+        "crontab_hour_param/",
+        (schedules.crontab_hour_param),
+        name="scheduled-hour-param",
+    ),
+    path(
+        "crontab_day_of_week_param/",
+        (schedules.crontab_day_of_week_param),
+        name="scheduled-day-of-week-param",
+    ),
+    path(
+        "crontab_day_of_month_param/",
+        (schedules.crontab_day_of_month_param),
+        name="scheduled-day-of-month-param",
+    ),
+    path(
+        "crontab_month_of_year_param/",
+        (schedules.crontab_month_of_year_param),
+        name="scheduled-month-of-year-param",
+    ),
 ]
 
 team_urlpatterns = [
@@ -223,7 +215,6 @@ team_urlpatterns = [
     ),
     path("users/", (teams.get_users), name="get-users"),
 ]
-
 
 workflows_urlpatterns = [
     path(
@@ -294,7 +285,6 @@ teams, environments, schedules, tasks, etc.
 
 """
 urlpatterns += environment_urlpatterns
-urlpatterns += htmx_urlpatterns
 urlpatterns += scheduling_urlpatterns
 urlpatterns += team_urlpatterns
 urlpatterns += workflows_urlpatterns

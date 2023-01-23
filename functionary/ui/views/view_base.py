@@ -54,7 +54,7 @@ class PermissionedEnvironmentDetailView(
 class PermissionedFormCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     def test_func(self):
         env = self.request.session.get("environment_id")
-        return self.request.user.has_perm(Permission.ENVIRONMENT_CREATE, env)
+        return self.request.user.has_perm(Permission.ENVIRONMENT_READ, env)
 
 
 class PermissionedFormUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):

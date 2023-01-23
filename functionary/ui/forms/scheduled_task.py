@@ -1,4 +1,4 @@
-from django.forms import CharField, ModelChoiceField, ModelForm, ValidationError
+from django.forms import CharField, ModelChoiceField, ModelForm
 from django.urls import reverse
 from django_celery_beat.validators import (
     day_of_month_validator,
@@ -59,19 +59,6 @@ class ScheduledTaskForm(ModelForm):
         self._setup_field_choices(is_create)
         self._update_function_queryset(environment)
         self._setup_field_classes()
-
-    def clean_function(self):
-        """The function field needs to be declared AFTER the environment field"""
-        function = self.cleaned_data["function"]
-        environment = self.cleaned_data["environment"]
-        available_functions = Function.objects.filter(package__environment=environment)
-        if function not in available_functions:
-            self.add_error(
-                "function",
-                ValidationError("Unknown function was provided.", code="invalid"),
-            )
-            return None
-        return function
 
     def _update_function_queryset(self, environment: Environment):
         if environment:

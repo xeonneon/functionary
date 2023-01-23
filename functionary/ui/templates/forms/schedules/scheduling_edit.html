@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load widget_tweaks %}
 {% load static %}
 {% block content %}
 <div class="block">
@@ -53,7 +54,6 @@
 
                 <hr/>
 
-                {% comment %} Should only render on update page {% endcomment %}
                 {% if update %}
                 <div class="field">
                     <div class="columns is-8">
@@ -124,9 +124,15 @@
                             </div>
                         </div>
                         <div class="column is-one-third">
+                            {% if update %}
+                            <div class="control">
+                                {% render_field form.function disabled=True %}
+                            </div>
+                            {% else %}
                             <div class="control">
                                 {{ form.function }}
                             </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -244,8 +250,11 @@
                 </div>
 
                 <hr/>
-
-                <input class="button is-link" type="submit" value="Update"/>
+                {% if update %}
+                    <input class="button is-link" type="submit" value="Update"/>
+                {% else %}
+                    <input class="button is-link" type="submit" value="Create"/>
+                {% endif %}
             </div>
         </form>
     {% endif %}

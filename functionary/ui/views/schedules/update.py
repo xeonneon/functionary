@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 
 from core.auth import Permission
-from core.models import Environment, Function, ScheduledTask
+from core.models import Environment, ScheduledTask
 from ui.forms import ScheduledTaskForm, TaskParameterForm
 from ui.views.schedules.utils import get_crontab_schedule
 from ui.views.view_base import PermissionedFormUpdateView
@@ -12,10 +12,11 @@ from ui.views.view_base import PermissionedFormUpdateView
 class ScheduledTaskUpdateView(PermissionedFormUpdateView):
     model = ScheduledTask
     form_class = ScheduledTaskForm
-    template_name = "forms/schedules/scheduling_create_or_update.html"
+    template_name = "forms/schedules/scheduling_edit.html"
 
     def get_success_url(self) -> str:
-        return reverse("ui:schedule-list")
+        scheduled_task: ScheduledTask = self.get_object()
+        return reverse("ui:detail-schedule", kwargs={"pk": scheduled_task.id})
 
     def get_initial(self) -> dict:
         initial = super().get_initial()
@@ -30,7 +31,7 @@ class ScheduledTaskUpdateView(PermissionedFormUpdateView):
 
     def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data(**kwargs)
-        scheduled_task: ScheduledTask = self.get_object()
+        scheduled_task: ScheduledTask = context["scheduledtask"]
         context["update"] = True
         context["task_parameter_form"] = TaskParameterForm(
             function=scheduled_task.function, initial=scheduled_task.parameters
@@ -49,7 +50,7 @@ class ScheduledTaskUpdateView(PermissionedFormUpdateView):
         scheduled_task: ScheduledTask = self.get_object()
         data: QueryDict = request.POST.copy()
         data["environment"] = scheduled_task.environment
-        data["function"] = get_object_or_404(Function, id=data["function"])
+        data["function"] = scheduled_task.function
         task_parameter_form = TaskParameterForm(data["function"], data)
 
         # Run is valid to clean fields and generate errors if present
@@ -74,9 +75,7 @@ class ScheduledTaskUpdateView(PermissionedFormUpdateView):
             "form": form,
             "task_parameter_form": task_parameter_form,
         }
-        return render(
-            request, "forms/schedules/scheduling_create_or_update.html", context
-        )
+        return render(request, "forms/schedules/scheduling_edit.html", context)
 
     def test_func(self) -> bool:
         environment = get_object_or_404(

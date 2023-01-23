@@ -2,6 +2,19 @@
 {% load static %}
 {% block content %}
 
+
+<nav class="breadcrumb has-arrow-separator mt-3" aria-label="breadcrumbs">
+    <ul>
+        <li>
+            <a href="{% url 'ui:schedule-list' %}">Schedules List</a>
+        </li>
+        <li class="is-active">
+            <a href="#">
+                {{ scheduledtask.name }}
+            </a>
+        </li>
+    </ul>
+</nav>
 <div class="block mt-4">
     <h1 class="title is-1">
         <p>
@@ -61,37 +74,28 @@
 
    <div class="field">
         <label class="label" for="params">
-            <i class="fa fa-clock-rotate-left"></i>&nbsp;History:
+            <i class="fa fa-clock-rotate-left"></i>&nbsp;Recent History:
         </label>
-        <div class="table-container">
+        <div class="table-container ml-4">
             <table class="table is-hoverable">
                 <thead>
                     <tr>
-                        <th>Created at</th>
+                        <th>Ran at</th>
                         <th>Status</th>
-                        <th>Function</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for task in page_obj.object_list %}
+                    {% for task in history %}
                     <tr>
                         <td>
                             <a href="{% url 'ui:task-detail' task.id %}">{{ task.created_at }}</a>
                         </td>
                         <td>{{ task.status }}</td>
-                        <td>
-                            {% if task.function.display_name %}
-                                <a href="{% url 'ui:function-detail' task.function.id %}">{{ task.function.display_name }} ({{ task.function.name }})</a>
-                            {% else %}
-                                <a href="{% url 'ui:function-detail' task.function.id %}">{{ task.function.name }}</a>
-                            {% endif %}
-                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        {% include "partials/pagination_navbar.html" %}
    </div> 
 </div>
 {% endblock content %}

@@ -3,7 +3,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_POST
 
-from .utils import (
+from core.utils.schedules import (
     is_valid_scheduled_day_of_month,
     is_valid_scheduled_day_of_week,
     is_valid_scheduled_hour,

@@ -15,11 +15,9 @@ from .utils import get_crontab_schedule
 class ScheduledTaskCreateView(PermissionedFormCreateView):
     model = ScheduledTask
     form_class = ScheduledTaskForm
-    template_name = "forms/schedules/scheduling_create_or_update.html"
+    template_name = "forms/schedules/scheduling_edit.html"
 
-    def get_success_url(self) -> str:
-        return reverse("ui:schedule-list")
-
+    
     def get_form_kwargs(self) -> dict:
         kwargs = super().get_form_kwargs()
         environment = get_object_or_404(
@@ -57,20 +55,18 @@ class ScheduledTaskCreateView(PermissionedFormCreateView):
             data=data, environment=data["environment"], is_create=True
         )
         if scheduled_task_form.is_valid():
-            _create_scheduled_task(
+            scheduled_task = _create_scheduled_task(
                 request,
                 scheduled_task_form.cleaned_data,
                 task_parameter_form.cleaned_data,
             )
-            return HttpResponseRedirect(self.get_success_url())
+            return HttpResponseRedirect(reverse("ui:detail-schedule", kwargs={"pk": scheduled_task.id}))
 
         context = {
             "form": scheduled_task_form,
             "task_parameter_form": task_parameter_form,
         }
-        return render(
-            request, "forms/schedules/scheduling_create_or_update.html", context
-        )
+        return render(request, "forms/schedules/scheduling_edit.html", context)
 
     def test_func(self) -> bool:
         environment = get_object_or_404(
@@ -81,7 +77,7 @@ class ScheduledTaskCreateView(PermissionedFormCreateView):
 
 def _create_scheduled_task(
     request: HttpRequest, schedule_form_data: dict, task_params: dict
-):
+) -> ScheduledTask:
     """Helper function for creating scheduled task"""
     with transaction.atomic():
         scheduled_task = ScheduledTask.objects.create(
@@ -95,3 +91,4 @@ def _create_scheduled_task(
         crontab_schedule = get_crontab_schedule(schedule_form_data)
         scheduled_task.set_schedule(crontab_schedule)
         scheduled_task.activate()
+    return scheduled_task
