@@ -17,7 +17,6 @@ class ScheduledTaskCreateView(PermissionedFormCreateView):
     form_class = ScheduledTaskForm
     template_name = "forms/schedules/scheduling_edit.html"
 
-    
     def get_form_kwargs(self) -> dict:
         kwargs = super().get_form_kwargs()
         environment = get_object_or_404(
@@ -60,7 +59,9 @@ class ScheduledTaskCreateView(PermissionedFormCreateView):
                 scheduled_task_form.cleaned_data,
                 task_parameter_form.cleaned_data,
             )
-            return HttpResponseRedirect(reverse("ui:detail-schedule", kwargs={"pk": scheduled_task.id}))
+            return HttpResponseRedirect(
+                reverse("ui:detail-schedule", kwargs={"pk": scheduled_task.id})
+            )
 
         context = {
             "form": scheduled_task_form,
