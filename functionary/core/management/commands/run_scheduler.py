@@ -13,6 +13,9 @@ logger = logging.getLogger("celery.beat")
 logger.setLevel(getattr(logging, LOG_LEVEL))
 
 
+CHECK_FOR_CHANGES_INTERVAL_SECONDS = 5
+
+
 class Command(BaseCommand):
     help = "Run the scheduler"
 
@@ -22,7 +25,7 @@ class Command(BaseCommand):
 
         scheduler = Beat(
             app=app,
-            max_interval=60,
+            max_interval=CHECK_FOR_CHANGES_INTERVAL_SECONDS,
             scheduler=schedulers.DatabaseScheduler,
             loglevel=LOG_LEVEL,
         )
