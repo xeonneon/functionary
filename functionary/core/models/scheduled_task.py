@@ -80,7 +80,7 @@ class ScheduledTask(ModelSaveHookMixin, models.Model):
         ]
 
     def __str__(self):
-        return str(self.id)
+        return str(self.name)
 
     def _clean_environment(self):
         """Ensures that the environment is correctly set to that of the function"""

@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
+
+<form action="{% url 'ui:task-list' %}" method="get">
+    {{ filter }}
+    <input type="submit" value="Search" />
+</form>
 {% for task in page_obj %}
     <div class="mb-2">
         {% include 'partials/task_element.html' with task=task %}

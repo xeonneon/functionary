@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "django_celery_beat",
+    "django_filters",
     "django_htmx",
     "widget_tweaks",
     "core",

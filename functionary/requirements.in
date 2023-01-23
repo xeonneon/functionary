@@ -2,6 +2,7 @@ celery
 django
 django-allauth
 django-celery-beat
+django-filter
 django-htmx
 django-widget-tweaks
 docker

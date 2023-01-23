@@ -1,5 +1,6 @@
 import csv
 
+import django_filters
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import BadRequest, ValidationError
 from django.http import (
@@ -13,7 +14,7 @@ from django.views.decorators.http import require_GET
 from django_htmx import http
 
 from core.auth import Permission
-from core.models import Environment, Task
+from core.models import Environment, Function, ScheduledTask, Task
 
 from .view_base import (
     PermissionedEnvironmentDetailView,
@@ -138,11 +139,57 @@ def _get_result_context(context: dict, format: str) -> dict:
     return context
 
 
+class TaskFilter(django_filters.FilterSet):
+    function = django_filters.ModelChoiceFilter(queryset=Function.objects.all())
+    scheduled_task = django_filters.ModelChoiceFilter(
+        queryset=ScheduledTask.objects.all()
+    )
+
+    class Meta:
+        model = Task
+        fields = ["function", "scheduled_task", "created_at"]
+
+    def __init__(self, environment: Environment, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.filters["function"].queryset = Function.objects.filter(
+            package__environment=environment
+        )
+        self.filters["scheduled_task"].queryset = ScheduledTask.objects.filter(
+            environment=environment
+        )
+
+
 class TaskListView(PermissionedEnvironmentListView):
     model = Task
     order_by_fields = ["-created_at"]
     queryset = Task.objects.select_related("environment", "function", "creator").all()
     paginate_by = PAGINATION_AMOUNT
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        environment = get_object_or_404(
+            Environment, id=self.request.session.get("environment_id")
+        )
+        filter = TaskFilter(
+            environment=environment,
+            queryset=Task.objects.select_related(
+                "environment", "function", "creator"
+            ).all(),
+        )
+        context["filter"] = filter.form
+        return context
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        environment = get_object_or_404(
+            Environment, id=self.request.session.get("environment_id")
+        )
+        filter = TaskFilter(
+            environment,
+            self.request.GET,
+            queryset=queryset,
+        )
+        return filter.qs
 
 
 class TaskDetailView(PermissionedEnvironmentDetailView):
