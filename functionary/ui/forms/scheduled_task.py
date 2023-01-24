@@ -1,4 +1,4 @@
-from django.forms import CharField, ModelForm, ValidationError
+from django.forms import CharField, ModelChoiceField, ModelForm
 from django.urls import reverse
 from django_celery_beat.validators import (
     day_of_month_validator,
@@ -36,59 +36,68 @@ class ScheduledTaskForm(ModelForm):
         initial="*",
         validators=[month_of_year_validator],
     )
+    function = ModelChoiceField(queryset=Function.objects.all(), required=True)
 
     class Meta:
         model = ScheduledTask
+
+        # NOTE: The order of the fields matters. The clean_<field> methods run based on
+        # the order they are defined in the 'fields =' attribute
         fields = [
             "name",
+            "environment",
             "description",
             "status",
             "function",
             "parameters",
-            "environment",
         ]
 
-    def __init__(self, *args, **kwargs):
-        env: Environment = kwargs.pop("env")
+    def __init__(self, environment: Environment = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["function"].queryset = Function.objects.filter(
-            package__environment=env
-        )
-        self.fields["status"].choices = self._get_status_choices()
+        self._setup_field_choices(kwargs.get("instance") is not None)
+        self._update_function_queryset(environment)
         self._setup_field_classes()
 
-    def clean(self):
-        cleaned_data = super().clean()
-        available_functions = Function.objects.filter(
-            package__environment=cleaned_data["environment"]
-        )
-        if cleaned_data["function"] not in available_functions:
-            self.add_error(
-                "function",
-                ValidationError("Unknown function was provided.", code="invalid"),
+    def _update_function_queryset(self, environment: Environment):
+        if environment:
+            self.fields["function"].queryset = Function.objects.filter(
+                package__environment=environment
             )
 
-        return cleaned_data
-
-    def _get_status_choices(self) -> list:
-        choices = []
-        for choice in ScheduledTask.STATUS_CHOICES:
-            if choice[0] == ScheduledTask.PENDING or choice[0] == ScheduledTask.ERROR:
-                continue
-            choices.append(choice)
+    def _get_create_status_choices(self) -> list:
+        """Don't want user to set status to Error"""
+        choices = [
+            choice
+            for choice in ScheduledTask.STATUS_CHOICES
+            if choice[0] != ScheduledTask.ERROR
+        ]
         return choices
 
-    def _setup_field_classes(self):
+    def _get_update_status_choices(self) -> list:
+        """Don't want user to set status to Error or Pending"""
+        choices = [
+            choice
+            for choice in ScheduledTask.STATUS_CHOICES
+            if choice[0] not in [ScheduledTask.ERROR, ScheduledTask.PENDING]
+        ]
+        return choices
+
+    def _setup_field_choices(self, is_update: bool) -> None:
+        if is_update:
+            self.fields["status"].choices = self._get_update_status_choices()
+        else:
+            self.fields["status"].choices = self._get_create_status_choices()
+
+    def _setup_field_classes(self) -> None:
         for field in self.fields:
-            self.fields[field].widget.attrs.update({"class": "input is-medium"})
-
-        self.fields["name"].widget.attrs.update(
-            {"class": "input is-medium is-fullwidth"}
-        )
-
-        self.fields["status"].widget.attrs.update(
-            {"class": "input is-medium is-fullwidth"}
-        )
+            if field not in ["status", "function"]:
+                self.fields[field].widget.attrs.update(
+                    {"class": "input is-medium is-fullwidth"}
+                )
+            else:
+                self.fields[field].widget.attrs.update(
+                    {"class": "select is-medium is-fullwidth"}
+                )
 
         self.fields["function"].widget.attrs.update(
             {

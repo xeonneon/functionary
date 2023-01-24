@@ -1,12 +1,17 @@
 {% extends "base.html" %}
+{% load widget_tweaks %}
 {% load static %}
 {% block content %}
 <div class="block">
     {% if form %}
-        <form id="scheduled-task-create-form"
-                method="post"
-                action="{% url 'ui:update-schedule' scheduledtask.id %}">
-            {% csrf_token %}
+        
+        {% if update %}
+            <form method="post" action="{% url 'ui:update-schedule' scheduledtask.id %}">
+        {% else %}
+            <form method="post" action="{% url 'ui:create-schedule' %}">
+        {% endif %}
+            
+        {% csrf_token %}
             
             <!-- Non-Field Errors display -->
             <div class="columns is-centered">
@@ -49,7 +54,7 @@
 
                 <hr/>
 
-                <!-- Status row/field -->
+                {% if update %}
                 <div class="field">
                     <div class="columns is-8">
                         <div class="column is-one-third">
@@ -72,8 +77,9 @@
                         </div>
                     </div>
                 </div>
-
+                
                 <hr/>
+                {% endif %}
 
                 <!-- Description row/field -->
                 <div class="field">
@@ -118,9 +124,15 @@
                             </div>
                         </div>
                         <div class="column is-one-third">
+                            {% if update %}
+                            <div class="control">
+                                {% render_field form.function disabled=True %}
+                            </div>
+                            {% else %}
                             <div class="control">
                                 {{ form.function }}
                             </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -223,21 +235,26 @@
                             <div class="column p-0 is-italic subtitle is-size-6">
                                 Please enter the parameters for the function.
                             </div>
-                            <div class="errorlist">
-                                {% if param_errors is not None %}
-                                    {{ param_errors }}
-                                {% endif %}
+                        </div>
+
+                        {% comment %} Render function param form if available. Else, lazy load. {% endcomment %}
+                        {% if task_parameter_form %}
+                            <div class="column" id="function-parameters">
+                                {{ task_parameter_form }}
                             </div>
-                        </div>
-                        <div class="column" id="function-parameters">
-                            {% include "forms/task_parameters.html" with form=parameter_form %}
-                        </div>
+                        {% else %}
+                            <div class="column" id="function-parameters" hx-trigger="load" hx-get="{% url 'ui:function-parameters' %}" hx-vals='{"function": "{{ function_id }}"}'>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
 
                 <hr/>
-
-                <input class="button is-link" type="submit" value="Update"/>
+                {% if update %}
+                    <input class="button is-link" type="submit" value="Update"/>
+                {% else %}
+                    <input class="button is-link" type="submit" value="Create"/>
+                {% endif %}
             </div>
         </form>
     {% endif %}
