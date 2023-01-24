@@ -54,7 +54,7 @@ class ScheduledTaskForm(ModelForm):
 
     def __init__(self, environment: Environment = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._setup_field_choices(kwargs.get("instance"))
+        self._setup_field_choices(kwargs.get("instance") is not None)
         self._update_function_queryset(environment)
         self._setup_field_classes()
 
