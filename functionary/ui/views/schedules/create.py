@@ -51,7 +51,7 @@ class ScheduledTaskCreateView(PermissionedFormCreateView):
 
         data["parameters"] = task_parameter_form.cleaned_data
         scheduled_task_form = ScheduledTaskForm(
-            data=data, environment=data["environment"], is_create=True
+            data=data, environment=data["environment"]
         )
         if scheduled_task_form.is_valid():
             scheduled_task = _create_scheduled_task(

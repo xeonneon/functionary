@@ -2,8 +2,6 @@ from core.models import Task
 from core.models.scheduled_task import ScheduledTask
 from ui.views.view_base import PermissionedEnvironmentDetailView
 
-PAGINATION_AMOUNT = 15
-
 
 class ScheduledTaskDetailView(PermissionedEnvironmentDetailView):
     model = ScheduledTask

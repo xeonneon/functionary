@@ -60,4 +60,4 @@ class PermissionedFormCreateView(LoginRequiredMixin, UserPassesTestMixin, Create
 class PermissionedFormUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def test_func(self):
         env = self.request.session.get("environment_id")
-        return self.request.user.has_perm(Permission.ENVIRONMENT_CREATE, env)
+        return self.request.user.has_perm(Permission.ENVIRONMENT_READ, env)

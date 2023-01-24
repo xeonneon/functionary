@@ -52,11 +52,9 @@ class ScheduledTaskForm(ModelForm):
             "parameters",
         ]
 
-    def __init__(self, *args, **kwargs):
-        environment = kwargs.pop("environment", None)
-        is_create = kwargs.pop("is_create", False)
+    def __init__(self, environment: Environment = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._setup_field_choices(is_create)
+        self._setup_field_choices(kwargs.get("instance"))
         self._update_function_queryset(environment)
         self._setup_field_classes()
 
@@ -84,11 +82,11 @@ class ScheduledTaskForm(ModelForm):
         ]
         return choices
 
-    def _setup_field_choices(self, is_create: bool) -> None:
-        if is_create:
-            self.fields["status"].choices = self._get_create_status_choices()
-        else:
+    def _setup_field_choices(self, is_update: bool) -> None:
+        if is_update:
             self.fields["status"].choices = self._get_update_status_choices()
+        else:
+            self.fields["status"].choices = self._get_create_status_choices()
 
     def _setup_field_classes(self) -> None:
         for field in self.fields:
