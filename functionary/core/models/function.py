@@ -20,6 +20,7 @@ class Function(models.Model):
     Attributes:
         id: unique identifier (UUID)
         package: the package that the function is a part of
+        environment: the environment the function is associated with
         name: internal name that published package definition keys off of
         display_name: optional display name
         summary: short description of the function
@@ -33,10 +34,9 @@ class Function(models.Model):
     package = models.ForeignKey(
         to="Package", on_delete=models.CASCADE, related_name="functions"
     )
+    environment = models.ForeignKey(to="Environment", on_delete=models.CASCADE)
 
-    # TODO: This shouldn't be changeable after creation
-    name = models.CharField(max_length=64, blank=False)
-
+    name = models.CharField(max_length=64, blank=False, editable=False)
     display_name = models.CharField(max_length=64, null=True)
     summary = models.CharField(max_length=128, null=True)
     description = models.TextField(null=True)
@@ -50,6 +50,26 @@ class Function(models.Model):
                 fields=["package", "name"], name="package_name_unique_together"
             )
         ]
+        indexes = [
+            models.Index(fields=["environment", "id"], name="function_environment_id"),
+            models.Index(
+                fields=["environment", "name"], name="function_environment_name"
+            ),
+            models.Index(
+                fields=["environment", "package"], name="function_environment_package"
+            ),
+        ]
 
     def __str__(self):
         return self.name
+
+    def _clean_environment(self):
+        if self.environment is None:
+            self.environment = self.package.environment
+        elif self.environment != self.package.environment:
+            raise ValidationError(
+                "Function environment must match Package environment.", code="invalid"
+            )
+
+    def clean(self):
+        self._clean_environment()

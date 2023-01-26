@@ -51,7 +51,7 @@ class WorkflowStepCreateForm(forms.ModelForm):
         if environment is not None:
             function_field = self.fields["function"]
             function_field.queryset = function_field.queryset.filter(
-                package__environment=environment
+                environment=environment
             )
 
 
