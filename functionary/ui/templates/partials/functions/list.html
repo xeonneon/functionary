@@ -1,0 +1,25 @@
+{% extends "partials/table.html" %}
+{% block table_headers %}
+    <th>Name</th>
+    <th>Package</th>
+    <th>Summary</th>
+{% endblock table_headers %}
+{% block table_rows %}
+    {% for function in page_obj %}
+        <tr>
+            <td>
+                <a href="{% url 'ui:function-detail' function.id %}">
+                    {% if function.display_name %}
+                        {{ function.display_name }}
+                    {% else %}
+                        {{ function.name }}
+                    {% endif %}
+                </a>
+            </td>
+            <td>
+                <a href="{% url 'ui:package-detail' function.package.id %}">{{ function.package.name }}</a>
+            </td>
+            <td>{{ function.summary }}</td>
+        </tr>
+    {% endfor %}
+{% endblock table_rows %}

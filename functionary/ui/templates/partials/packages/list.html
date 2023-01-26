@@ -1,0 +1,21 @@
+{% extends "partials/table.html" %}
+{% block table_headers %}
+    <th>Name</th>
+    <th>Summary</th>
+{% endblock table_headers %}
+{% block table_rows %}
+    {% for package in page_obj %}
+        <tr>
+            <td>
+                <a href="{% url 'ui:package-detail' package.id %}">
+                    {% if package.display_name %}
+                        {{ package.display_name }}
+                    {% else %}
+                        {{ package.name }}
+                    {% endif %}
+                </a>
+            </td>
+            <td>{{ package.summary }}</td>
+        </tr>
+    {% endfor %}
+{% endblock table_rows %}

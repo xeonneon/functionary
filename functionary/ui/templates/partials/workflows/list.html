@@ -1,0 +1,17 @@
+{% extends "partials/table.html" %}
+{% block table_headers %}
+    <th>Name</th>
+    <th>Description</th>
+    <th>Creator</th>
+{% endblock table_headers %}
+{% block table_rows %}
+    {% for workflow in page_obj %}
+        <tr>
+            <td>
+                <a href="{% url 'ui:workflow-detail' workflow.id %}">{{ workflow.name }}</a>
+            </td>
+            <td>{{ workflow.description }}</td>
+            <td>{{ workflow.creator.username }}</td>
+        </tr>
+    {% endfor %}
+{% endblock table_rows %}

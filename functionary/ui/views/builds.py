@@ -3,12 +3,15 @@ from builder.models import Build
 from .generic import PermissionedDetailView, PermissionedListView
 from .tasks import FINISHED_STATUS
 
+PAGINATION_AMOUNT = 15
+
 
 class BuildListView(PermissionedListView):
     model = Build
     permissioned_model = "Package"
     ordering = ["-created_at"]
     queryset = Build.objects.select_related("creator", "package").all()
+    paginate_by = PAGINATION_AMOUNT
 
 
 class BuildDetailView(PermissionedDetailView):

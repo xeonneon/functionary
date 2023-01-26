@@ -1,7 +1,7 @@
 from core.models import Workflow
 from ui.views.generic import PermissionedListView
 
-PAGINATION_AMOUNT = 10
+PAGINATION_AMOUNT = 15
 
 
 class WorkflowListView(PermissionedListView):

@@ -1,0 +1,19 @@
+{% extends "partials/table.html" %}
+{% block table_headers %}
+    <th>Package Name</th>
+    <th>Status</th>
+    <th>Created at</th>
+    <th>Creator</th>
+{% endblock table_headers %}
+{% block table_rows %}
+    {% for build in page_obj %}
+        <tr>
+            <td>
+                <a href="{% url 'ui:build-detail' build.id %}">{{ build.package }}</a>
+            </td>
+            <td>{{ build.status }}</td>
+            <td>{{ build.created_at }}</td>
+            <td>{{ build.creator.username }}</td>
+        </tr>
+    {% endfor %}
+{% endblock table_rows %}

@@ -1,11 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-{% for task in page_obj %}
-    <div class="mb-2">
-        {% include 'partials/task_element.html' with task=task %}
-    </div>
-{% endfor %}
-
-{% include 'partials/pagination_navbar.html' with page_obj=page_obj paginator=paginator %}
-{% endblock %}
+    {% include "partials/tasks/list.html" %}
+    {% include "partials/pagination_navbar.html" with page_obj=page_obj paginator=paginator %}
+{% endblock content %}

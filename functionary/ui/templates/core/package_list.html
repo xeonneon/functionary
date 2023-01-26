@@ -1,30 +1,5 @@
 {% extends "base.html" %}
 {% block content %}
-    <div>
-        {% for package in object_list %}
-            <div class="block">
-                <div class="card">
-                    <div class="card-content">
-                        <div class="media">
-                            <div class="media-left">
-                                <span class="icon is-large">
-                                    <i class="fa fa-2x fa-cubes"></i>
-                                </span>
-                            </div>
-                            <div class="media-content">
-                                <a href="{% url 'ui:package-detail' package.id %}">
-                                    <p class="title is-4">{{ package.render_name }}</p>
-                                </a>
-                                {% if package.summary %}
-                                    <p class="subtitle is-6">{{ package.summary }}</p>
-                                {% elif package.description %}
-                                    <p class="subtitle is-6">{{ package.description }}</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
-    </div>
+    {% include "partials/packages/list.html" %}
+    {% include "partials/pagination_navbar.html" with page_obj=page_obj paginator=paginator %}
 {% endblock content %}
