@@ -69,3 +69,8 @@ class Function(models.Model):
 
     def clean(self):
         self._clean_environment()
+    
+    @property
+    def render_name(self) -> str:
+        """Returns the template-renderable name of the function"""
+        return self.display_name if self.display_name else self.name

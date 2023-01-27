@@ -9,10 +9,10 @@
                     <a href="{% url 'ui:function-list' %}">Function List</a>
                 </li>
                 <li>
-                    <span class="icon mr-0 ml-2"><i class="fa fa-cubes"></i></span><a class="pl-0" href="{% url 'ui:package-detail' function.package.id %}">{{ function.package }}</a>
+                    <span class="icon mr-0 ml-2"><i class="fa fa-cubes"></i></span><a class="pl-0" href="{% url 'ui:package-detail' function.package.id %}">{{ function.package.render_name }}</a>
                 </li>
                 <li class="is-active">
-                    <a href="#">{{ function }}</a>
+                    <a href="#">{{ function.render_name }}</a>
                 </li>
             </ul>
         </nav>
@@ -22,7 +22,7 @@
             <h1 class="title is-1">
                 <p>
                     <i class="fa fa-cube"></i>
-                    <span>{{ function }}</span>
+                    <span>{{ function.render_name }}</span>
                 </p>
             </h1>
         </div>

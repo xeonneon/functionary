@@ -35,7 +35,7 @@
                             <a href="{% url 'ui:detail-schedule' scheduledtask.id %}">{{ scheduledtask.name }}</a>
                         </td>
                         <td>
-                            <a href="{% url 'ui:function-detail' scheduledtask.function.id %}">{{ scheduledtask.function }}</a>
+                            <a href="{% url 'ui:function-detail' scheduledtask.function.id %}">{{ scheduledtask.function.render_name }}</a>
                         </td>
                         <td>
                             {% if scheduledtask.most_recent_task %}

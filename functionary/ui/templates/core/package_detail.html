@@ -8,7 +8,7 @@
                         <a href="{% url 'ui:package-list' %}">Package List</a>
                     </li>
                     <li class="is-active">
-                        <a href="#">{{ package }}</a>
+                        <a href="#">{{ package.render_name }}</a>
                     </li>
                 </ul>
             </nav>
@@ -18,7 +18,7 @@
                 <h1 class="title is-1">
                     <p>
                         <i class="fa fa-cubes"></i>
-                        <span>{{ package }}</span>
+                        <span>{{ package.render_name }}</span>
                     </p>
                 </h1>
             </div>
@@ -42,7 +42,7 @@
                         {% for function in functions %}
                             <li class="block ml-4">
                                 <a href="{% url 'ui:function-detail' function.id %}">
-                                    {{ function }}
+                                    {{ function.render_name }}
                                 </a>
                                 <br/>
                                 <span class="ml-4">{{ function.summary }}</span>

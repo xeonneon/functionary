@@ -53,7 +53,7 @@
         <label class="label" for="function">
             <i class="fa fa-cube"></i>&nbsp;Function:
         </label>
-            <a href="{% url 'ui:function-detail' scheduledtask.function.id %}"><span class="ml-4">{{ scheduledtask.function }}</span></a>
+        <a href="{% url 'ui:function-detail' scheduledtask.function.id %}"><span class="ml-4">{{ scheduledtask.function.render_name }}</span></a>
     </div>
     <div class="field">
         <label class="label" for="crontab">

@@ -44,6 +44,11 @@ class Package(models.Model):
         ]
 
     def __str__(self):
+        return self.name
+
+    @property
+    def render_name(self) -> str:
+        """Returns the template-renderable name of the package"""
         return self.display_name if self.display_name else self.name
 
     @property
