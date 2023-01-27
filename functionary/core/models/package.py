@@ -17,6 +17,8 @@ class Package(models.Model):
         display_name: optional display name
         summary: summary of the package
         description: more details about the package
+        language: the language the functions in the package are written in
+        image_name: the docker image name for the package
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -42,7 +44,7 @@ class Package(models.Model):
         ]
 
     def __str__(self):
-        return self.name
+        return self.display_name if self.display_name else self.name
 
     @property
     def full_image_name(self):

@@ -8,13 +8,7 @@
                         <a href="{% url 'ui:package-list' %}">Package List</a>
                     </li>
                     <li class="is-active">
-                        <a href="#">
-                            {% if package.display_name %}
-                                {{ package.display_name }}
-                            {% else %}
-                                {{ package.name }}
-                            {% endif %}
-                        </a>
+                        <a href="#">{{ package }}</a>
                     </li>
                 </ul>
             </nav>
@@ -24,13 +18,7 @@
                 <h1 class="title is-1">
                     <p>
                         <i class="fa fa-cubes"></i>
-                        <span>
-                            {% if package.display_name %}
-                                {{ package.display_name }}
-                            {% else %}
-                                {{ package.name }}
-                            {% endif %}
-                        </span>
+                        <span>{{ package }}</span>
                     </p>
                 </h1>
             </div>
@@ -54,11 +42,7 @@
                         {% for function in functions %}
                             <li class="block ml-4">
                                 <a href="{% url 'ui:function-detail' function.id %}">
-                                    {% if function.display_name %}
-                                        {{ function.display_name }}
-                                    {% else %}
-                                        {{ function.name }}
-                                    {% endif %}
+                                    {{ function }}
                                 </a>
                                 <br/>
                                 <span class="ml-4">{{ function.summary }}</span>

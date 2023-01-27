@@ -9,16 +9,10 @@
                     <a href="{% url 'ui:function-list' %}">Function List</a>
                 </li>
                 <li>
-                    <span class="icon mr-0 ml-2"><i class="fa fa-cubes"></i></span><a class="pl-0" href="{% url 'ui:package-detail' function.package.id %}">{{ function.package.name }}</a>
+                    <span class="icon mr-0 ml-2"><i class="fa fa-cubes"></i></span><a class="pl-0" href="{% url 'ui:package-detail' function.package.id %}">{{ function.package }}</a>
                 </li>
                 <li class="is-active">
-                    <a href="#">
-                        {% if function.display_name %}
-                            {{ function.display_name }}
-                        {% else %}
-                            {{ function.name }}
-                        {% endif %}
-                    </a>
+                    <a href="#">{{ function }}</a>
                 </li>
             </ul>
         </nav>
@@ -28,13 +22,7 @@
             <h1 class="title is-1">
                 <p>
                     <i class="fa fa-cube"></i>
-                    <span>
-                        {% if function.display_name %}
-                            {{ function.display_name }}
-                        {% else %}
-                            {{ function.name }}
-                        {% endif %}
-                    </span>
+                    <span>{{ function }}</span>
                 </p>
             </h1>
         </div>

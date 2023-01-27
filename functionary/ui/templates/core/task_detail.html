@@ -9,7 +9,7 @@
                         <a href="{% url 'ui:task-list' %}">Task List</a>
                     </li>
                     <li class="is-active">
-                        <a href="#">{{ task.function.name }}</a>
+                        <a href="#">{{ task.function }}</a>
                     </li>
                 </ul>
             </nav>
@@ -19,7 +19,7 @@
                 <h1 class="title is-1">
                     <p>
                         <i class="fa fa-digital-tachograph"></i>
-                        <span>{{ task.function.name }}</span>
+                        <span>{{ task.function }}</span>
                         <i class="is-size-5 fa fa-info pl-4"></i>
                         <span class="is-size-5 has-text-weight-normal">{{ task.status }}</span>
                     </p>

@@ -53,11 +53,7 @@
         <label class="label" for="function">
             <i class="fa fa-cube"></i>&nbsp;Function:
         </label>
-        {% if scheduledtask.function.display_name %}
-            <a href="{% url 'ui:function-detail' scheduledtask.function.id %}"><span class="ml-4">{{ scheduledtask.function.name }} ({{ scheduledtask.function.display_name }})</span></a>
-        {% else %}
-            <a href="{% url 'ui:function-detail' scheduledtask.function.id %}"><span class="ml-4">{{ scheduledtask.function.name }}</span></a>
-        {% endif %}
+            <a href="{% url 'ui:function-detail' scheduledtask.function.id %}"><span class="ml-4">{{ scheduledtask.function }}</span></a>
     </div>
     <div class="field">
         <label class="label" for="crontab">

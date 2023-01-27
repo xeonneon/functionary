@@ -16,11 +16,7 @@
                     <div class="media-content">
                         <a href="{% url 'ui:team-detail' team.id %}">
                             <p class="title is-4">
-                                {% if team.display_name %}
-                                {{ team.display_name }} ({{ team.name }})
-                                {% else %}
                                 {{ team.name }}
-                                {% endif %}
                             </p>
                         </a>
                         <p class="subtitle is-6">
