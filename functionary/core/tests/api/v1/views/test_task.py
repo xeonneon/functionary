@@ -25,7 +25,10 @@ def function(package):
         "properties": {"prop1": {"type": "integer"}},
     }
     return Function.objects.create(
-        name="testfunction", package=package, schema=function_schema
+        name="testfunction",
+        package=package,
+        environment=package.environment,
+        schema=function_schema,
     )
 
 

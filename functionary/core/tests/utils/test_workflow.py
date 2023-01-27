@@ -34,6 +34,7 @@ def function(package):
     return Function.objects.create(
         name="testfunction",
         package=package,
+        environment=package.environment,
         schema=function_schema,
     )
 
