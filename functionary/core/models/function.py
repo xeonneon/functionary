@@ -51,13 +51,9 @@ class Function(models.Model):
             )
         ]
         indexes = [
-            models.Index(fields=["environment", "id"], name="function_environment_id"),
             models.Index(
                 fields=["environment", "name"], name="function_environment_name"
-            ),
-            models.Index(
-                fields=["environment", "package"], name="function_environment_package"
-            ),
+            )
         ]
 
     def __str__(self):
