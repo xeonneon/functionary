@@ -1,5 +1,34 @@
 {% extends "base.html" %}
 {% block content %}
-    {% include "partials/functions/list.html" %}
+    <div class="table-container">
+        <table class="table is-striped is-hoverable is-fullwidth">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Package</th>
+                    <th>Summary</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for function in page_obj %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'ui:function-detail' function.id %}">
+                                {% if function.display_name %}
+                                    {{ function.display_name }}
+                                {% else %}
+                                    {{ function.name }}
+                                {% endif %}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{% url 'ui:package-detail' function.package.id %}">{{ function.package.name }}</a>
+                        </td>
+                        <td>{{ function.summary }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% include "partials/pagination_navbar.html" with page_obj=page_obj paginator=paginator %}
 {% endblock content %}

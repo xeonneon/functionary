@@ -1,6 +1,31 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-    {% include "partials/tasks/list.html" %}
+    <div class="table-container">
+        <table class="table is-striped is-hoverable is-fullwidth">
+            <thead>
+                <tr>
+                    <th>Function</th>
+                    <th>Status</th>
+                    <th>Creator</th>
+                    <th>Created at</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in page_obj %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'ui:function-detail' task.function.id %}">{{ task.function.name }}</a>
+                        </td>
+                        <td>{{ task.status }}</td>
+                        <td>{{ task.creator.username }}</td>
+                        <td>
+                            <a href="{% url 'ui:task-detail' task.id %}">{{ task.created_at }}</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% include "partials/pagination_navbar.html" with page_obj=page_obj paginator=paginator %}
 {% endblock content %}

@@ -1,5 +1,30 @@
 {% extends "base.html" %}
 {% block content %}
-    {% include "partials/packages/list.html" %}
+    <div class="table-container">
+        <table class="table is-striped is-hoverable is-fullwidth">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Summary</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for package in page_obj %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'ui:package-detail' package.id %}">
+                                {% if package.display_name %}
+                                    {{ package.display_name }}
+                                {% else %}
+                                    {{ package.name }}
+                                {% endif %}
+                            </a>
+                        </td>
+                        <td>{{ package.summary }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% include "partials/pagination_navbar.html" with page_obj=page_obj paginator=paginator %}
 {% endblock content %}
