@@ -39,7 +39,7 @@
                 <ul id="packages">
                     {% for package in packages %}
                         <li class="block ml-4">
-                            <a href="{% url 'ui:package-detail' package.id %}">{{ package.name }}</a>
+                            <a href="{% url 'ui:package-detail' package.id %}">{{ package.render_name }}</a>
                             <br/>
                             {{ package.summary }}
                         </li>

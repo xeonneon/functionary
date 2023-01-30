@@ -16,11 +16,7 @@
                     <div class="media-content">
                         <a href="{% url 'ui:environment-detail' environment.id %}">
                             <p class="title is-4">
-                                {% if environment.display_name %}
-                                {{ environment.display_name }} ({{ environment.name }})
-                                {% else %}
                                 {{ environment.name }}
-                                {% endif %}
                             </p>
                         </a>
                         <p class="subtitle is-6">

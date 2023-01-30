@@ -13,13 +13,7 @@
                             </div>
                             <div class="media-content">
                                 <a href="{% url 'ui:package-detail' package.id %}">
-                                    <p class="title is-4">
-                                        {% if package.display_name %}
-                                            {{ package.display_name }} ({{ package.name }})
-                                        {% else %}
-                                            {{ package.name }}
-                                        {% endif %}
-                                    </p>
+                                    <p class="title is-4">{{ package.render_name }}</p>
                                 </a>
                                 {% if package.summary %}
                                     <p class="subtitle is-6">{{ package.summary }}</p>
