@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-    <div class="table-container">
+    <div class="table-container mt-5">
         <table class="table is-striped is-hoverable is-fullwidth">
             <thead>
                 <tr>
@@ -15,13 +15,11 @@
                 {% for task in page_obj %}
                     <tr>
                         <td>
-                            <a href="{% url 'ui:function-detail' task.function.id %}">{{ task.function.name }}</a>
+                            <a href="{% url 'ui:task-detail' task.id %}">{{ task.function.name }}</a>
                         </td>
                         <td>{{ task.status }}</td>
                         <td>{{ task.creator.username }}</td>
-                        <td>
-                            <a href="{% url 'ui:task-detail' task.id %}">{{ task.created_at }}</a>
-                        </td>
+                        <td>{{ task.created_at }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
