@@ -1,33 +1,22 @@
 {% extends "base.html" %}
-
 {% block content %}
-
-<div>
-    {% for team in object_list %}
-    <div class="block">
-        <div class="card">
-            <div class="card-content">
-                <div class="media">
-                    <div class="media-left">
-                        <span class="icon is-large">
-                            <i class="fa fa-2x fa-users"></i>
-                        </span>
-                    </div>
-                    <div class="media-content">
-                        <a href="{% url 'ui:team-detail' team.id %}">
-                            <p class="title is-4">
-                                {{ team.name }}
-                            </p>
-                        </a>
-                        <p class="subtitle is-6">
-                            {{ team.description }}
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="table-container mt-5">
+        <table class="table is-striped is-hoverable is-fullwidth">
+            <thead>
+                <tr>
+                    <th>Team</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for team in page_obj %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'ui:team-detail' team.id %}">{{ team.name }}</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-    {% endfor %}
-</div>
-
+    {% include "partials/pagination_navbar.html" with page_obj=page_obj paginator=paginator %}
 {% endblock content %}

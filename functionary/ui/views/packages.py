@@ -2,9 +2,12 @@ from core.models import Package
 
 from .generic import PermissionedDetailView, PermissionedListView
 
+PAGINATION_AMOUNT = 15
+
 
 class PackageListView(PermissionedListView):
     model = Package
+    paginate_by = PAGINATION_AMOUNT
 
 
 class PackageDetailView(PermissionedDetailView):

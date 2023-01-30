@@ -1,32 +1,28 @@
 {% extends "base.html" %}
 {% block content %}
-    <div>
-        {% for build in object_list %}
-            <div class="block">
-                <div class="card">
-                    <div class="card-content">
-                        <div class="media">
-                            <div class="media-left">
-                                <span class="icon is-large">
-                                    <i class="fa fa-2x fa-wrench"></i>
-                                </span>
-                            </div>
-                            <div class="media-content">
-                                <a href="{% url 'ui:build-detail' build.id %}">
-                                    <p class="title is-4">{{ build.package }}</p>
-                                </a>
-                                <p class="subtitle is-6">
-                                    <span class="is-size-6 has-text-weight-normal">Status: {{ build.status }}</span>
-                                    <br/>
-                                    <span><i class="fa fa-user"></i>&nbsp;{{ build.creator.username }}</span>
-                                    <br/>
-                                    <span class="is-size-6 has-text-weight-normal">(Created at {{ build.created_at }})</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
+    <div class="table-container mt-5">
+        <table class="table is-striped is-hoverable is-fullwidth">
+            <thead>
+                <tr>
+                    <th>Package Name</th>
+                    <th>Status</th>
+                    <th>Created at</th>
+                    <th>Creator</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for build in page_obj %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'ui:build-detail' build.id %}">{{ build.package.render_name }}</a>
+                        </td>
+                        <td>{{ build.status }}</td>
+                        <td>{{ build.created_at }}</td>
+                        <td>{{ build.creator.username }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+    {% include "partials/pagination_navbar.html" with page_obj=page_obj paginator=paginator %}
 {% endblock content %}

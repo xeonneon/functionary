@@ -17,12 +17,15 @@ from ui.forms.tasks import TaskParameterForm, TaskParameterTemplateForm
 
 from .generic import PermissionedDetailView, PermissionedListView
 
+PAGINATION_AMOUNT = 15
+
 
 class FunctionListView(PermissionedListView):
     model = Function
     environment_through_field = "package"
     queryset = Function.objects.select_related("package").all()
     ordering = ["package__name", "name"]
+    paginate_by = PAGINATION_AMOUNT
 
 
 class FunctionDetailView(PermissionedDetailView):

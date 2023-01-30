@@ -18,7 +18,7 @@ from core.models import Environment, Task
 from .generic import PermissionedDetailView, PermissionedListView
 
 FINISHED_STATUS = ["COMPLETE", "ERROR"]
-PAGINATION_AMOUNT = 8
+PAGINATION_AMOUNT = 15
 
 
 def _detect_csv(result):

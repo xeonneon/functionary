@@ -1,38 +1,26 @@
 {% extends "base.html" %}
-
 {% block content %}
-
-<div>
-    {% for environment in object_list %}
-    <div class="block">
-        <div class="card">
-            <div class="card-content">
-                <div class="media">
-                    <div class="media-left">
-                        <span class="icon is-large">
-                            <i class="fa fa-2x fa-building"></i>
-                        </span>
-                    </div>
-                    <div class="media-content">
-                        <a href="{% url 'ui:environment-detail' environment.id %}">
-                            <p class="title is-4">
-                                {{ environment.name }}
-                            </p>
-                        </a>
-                        <p class="subtitle is-6">
-                          <a class="has-text-info" href="{% url 'ui:team-detail' environment.team.id %}">
-                              <span class="icon"><i class="fa fa-users"></i></span>&nbsp;{{ environment.team.name }}
-                          </a>
-                      </p>
-                      {% if environment.description %}
-                      <p class="subtitle is-6">{{ environment.description }}</p>
-                      {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="table-container mt-5">
+        <table class="table is-striped is-hoverable is-fullwidth">
+            <thead>
+                <tr>
+                    <th>Environment</th>
+                    <th>Team</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for environment in page_obj %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'ui:environment-detail' environment.id %}">{{ environment.name }}</a>
+                        </td>
+                        <td>
+                            <a href="{% url 'ui:team-detail' environment.team.id %}">{{ environment.team.name }}</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-    {% endfor %}
-</div>
-
+    {% include "partials/pagination_navbar.html" with page_obj=page_obj paginator=paginator %}
 {% endblock content %}
