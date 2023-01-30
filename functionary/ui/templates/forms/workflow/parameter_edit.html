@@ -8,9 +8,9 @@
 
 {% block form_declaration %}
     {% if workflowparameter %}
-        <form id="parameter-form" method="post" hx-post="{% url 'ui:workflowparameter-edit' workflow.pk workflowparameter.pk %}" hx-target="#form-modal" hx-swap="outerHTML">
+        <form id="parameter-form" method="post" hx-post="{% url 'ui:workflowparameter-edit' workflow.pk workflowparameter.pk %}" hx-target="#form-modal" hx-swap="outerHTML" enctype="multipart/form-data">
     {% else %}
-        <form id="parameter-form" method="post" hx-post="{% url 'ui:workflowparameter-create' workflow.pk %}" hx-target="#form-modal" hx-swap="outerHTML">
+        <form id="parameter-form" method="post" hx-post="{% url 'ui:workflowparameter-create' workflow.pk %}" hx-target="#form-modal" hx-swap="outerHTML" enctype="multipart/form-data">
     {% endif %}
     {% csrf_token %}
 {% endblock form_declaration %}

@@ -8,6 +8,7 @@ from django.forms import (
     DateField,
     DateTimeField,
     Field,
+    FileInput,
     FloatField,
     Form,
     IntegerField,
@@ -36,6 +37,7 @@ _field_mapping = {
     "string": (CharField, None),
     "text": (CharField, Textarea),
     "number": (FloatField, None),
+    "file": (CharField, FileInput),
     "boolean": (BooleanField, None),
     "date": (DateField, HTMLDateInput),
     "date-time": (
@@ -67,6 +69,8 @@ def _get_param_type(param_dict: dict) -> str:
     the input field has a definition of what type it is. If there is an anyOf,
     inspect it and try find out what type it should be. Otherwise, return the
     value of 'type' in param_dict.
+
+    NOTE: This is coupled with builder/utils.py:333
     """
     keys = param_dict.keys()
 
@@ -75,14 +79,13 @@ def _get_param_type(param_dict: dict) -> str:
         return param_dict["format"]
     # json and text get mapped to TypeVars to preserve the distinction vs string
     elif "anyOf" in keys:
-        return (
-            "json"
-            if any(
-                param_types.get("format", None) == "json-string"
-                for param_types in param_dict["anyOf"]
-            )
-            else "text"
-        )
+        for param_types in param_dict["anyOf"]:
+            if (param_type := param_types.get("format", None)) == "json-string":
+                return "json"
+            elif param_type == "uri":
+                return "file"
+            else:
+                return "text"
     else:
         return param_dict["type"]
 
@@ -125,8 +128,9 @@ class TaskParameterForm(Form):
         data: dict | None = None,
         initial: dict | None = None,
         prefix: str = "task-parameter",
+        **kwargs,
     ):
-        super().__init__(data=data, prefix=prefix)
+        super().__init__(data=data, prefix=prefix, **kwargs)
 
         if initial is None:
             initial = {}
@@ -199,6 +203,7 @@ class TaskParameterTemplateForm(TaskParameterForm):
         function: "Function",
         data: Optional["QueryDict"] = None,
         initial: Optional[str] = None,
+        **kwargs,
     ):
         """TaskParameterTemplateForm init
 
@@ -211,7 +216,7 @@ class TaskParameterTemplateForm(TaskParameterForm):
             json.loads(self._stringify_template_variables(initial)) if initial else {}
         )
 
-        super().__init__(function=function, data=data, initial=initial_data)
+        super().__init__(function=function, data=data, initial=initial_data, **kwargs)
 
     def get_field_info(
         self, parameter_type: str, input_value: str | None

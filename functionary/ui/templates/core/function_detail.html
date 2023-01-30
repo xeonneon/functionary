@@ -59,7 +59,8 @@
                     <div class="ml-4">
                         <form id="djangoForm"
                               method="post"
-                              action="{% url 'ui:function-execute' %}">
+                              action="{% url 'ui:function-execute' %}"
+                              enctype="multipart/form-data">
                             {% csrf_token %}
                             <div class="has-background-white-ter">
                                 <input type="hidden" name="function_id" value="{{ function.id }}"/>

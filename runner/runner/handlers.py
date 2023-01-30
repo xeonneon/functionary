@@ -58,6 +58,7 @@ def _run_task(task):
             detach=True,
             command=run_command,
             environment=variables,
+            network_mode="functionary-network",
         )
     except DockerException as exc:
         return (1, f"Unable to execute function. Encountered error: {exc}", "null")

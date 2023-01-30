@@ -5,8 +5,16 @@ from celery.utils.log import get_task_logger
 from django.conf import settings
 
 from core.celery import app
-from core.models import ScheduledTask, Task, TaskLog, TaskResult, WorkflowRunStep
+from core.models import (
+    Environment,
+    ScheduledTask,
+    Task,
+    TaskLog,
+    TaskResult,
+    WorkflowRunStep,
+)
 from core.utils.messaging import get_route, send_message
+from core.utils.minio import MinioInterface
 
 logger = get_task_logger(__name__)
 logger.setLevel(getattr(logging, settings.LOG_LEVEL))
@@ -59,6 +67,8 @@ def publish_task(task_id: UUID) -> None:
     task = Task.objects.select_related(
         "function", "function__package", "environment"
     ).get(id=task_id)
+
+    _handle_file_parameters(task.function.schema, task.parameters, task.environment)
 
     exchange, routing_key = get_route(task)
     send_message(exchange, routing_key, "TASK_PACKAGE", _generate_task_message(task))
@@ -150,3 +160,47 @@ def _handle_workflow_run(workflow_run_step: WorkflowRunStep, task: Task) -> None
                 workflow_run.complete()
         case Task.ERROR:
             workflow_run.error()
+
+
+def _handle_file_parameters(
+    schema: dict, parameters: dict, environment: Environment
+) -> None:
+    """Update all file parameter's filenames to presigned URLs
+
+    This function will mutate all file parameters to their
+    corresponding presigned URLs. This should only be done
+    before a task is sent to the runner. The task should not
+    save the presigned URL to its database entry.
+
+    Arguments:
+        schema: The function schema
+        parameters: The task parameters. This should be passed in as
+            task.parameters, so that the parameters dictionary can be mutated
+        environment: The environment of the task
+
+    Returns:
+        None
+    """
+    for param_name, param_info in schema.get("properties").items():
+        if param_type := param_info.get("anyOf"):
+            _update_file_parameter(param_name, param_type, parameters, environment)
+
+
+def _update_file_parameter(
+    param_name: str, schema: dict, parameters: dict, environment: Environment
+) -> None:
+    for param_meta in schema:
+        if _is_file_param(param_meta.get("format")):
+            parameters[param_name] = _get_presigned_url(
+                parameters[param_name], environment
+            )
+
+
+def _is_file_param(format: str) -> bool:
+    return format == "uri"
+
+
+def _get_presigned_url(filename: str, environment: Environment) -> str:
+    minio = MinioInterface(bucket_name=str(environment.id))
+    presigned_url = minio.get_presigned_url(filename)
+    return presigned_url

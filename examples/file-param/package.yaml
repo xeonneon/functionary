@@ -1,0 +1,20 @@
+version: 1.0
+package:
+  name: "file-param"
+  display_name: File Parameter Example
+  summary: Prints the number of characters in a file
+  description: Prints the total number of characters in a file's contents
+  language: "python"
+  functions:
+   - name: num_chars
+     summary: Returns the number of characters in the file
+     display_name: Number of Characters
+     description: Returns the number of characters in the file
+     return_type: integer
+     parameters:
+       - name: file
+         display_name: File
+         summary: File to measure
+         description: Input file that will be measured
+         type:  file
+         required: true
