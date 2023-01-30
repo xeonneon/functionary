@@ -131,7 +131,7 @@ def function_parameters(request: HttpRequest) -> HttpResponse:
     if (function_id := request.GET.get("function")) in ["", None]:
         return HttpResponse("No function selected.")
 
-    function = get_object_or_404(Function, id=function_id, package__environment=env)
+    function = get_object_or_404(Function, id=function_id, environment=env)
 
     form = form_class(function=function)
     return render(request, form.template_name, {"form": form})

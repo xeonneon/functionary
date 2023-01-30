@@ -51,7 +51,7 @@ class TaskCreateByNameSerializer(serializers.ModelSerializer):
             validated_data["function"] = Function.objects.get(
                 name=function_name,
                 package__name=package_name,
-                package__environment=validated_data["environment"],
+                environment=validated_data["environment"],
             )
         except Function.DoesNotExist:
             raise serializers.ValidationError(

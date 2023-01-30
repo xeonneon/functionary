@@ -60,9 +60,6 @@ class Task(ModelSaveHookMixin, models.Model):
     class Meta:
         indexes = [
             models.Index(
-                fields=["environment", "function"], name="task_environment_function"
-            ),
-            models.Index(
                 fields=["environment", "status"], name="task_environment_status"
             ),
             models.Index(

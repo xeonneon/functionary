@@ -33,5 +33,8 @@ jobs:
         run:
           python -m pip install -r ${{ matrix.component }}/requirements.txt -r
           ${{ matrix.component }}/requirements-dev.txt
+      - name: make migrations
+        if: ${{ matrix.component == 'functionary' }}
+        run: python functionary/manage.py makemigrations
       - name: run tests
         run: pytest ${{ matrix.component }}/

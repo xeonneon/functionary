@@ -285,7 +285,7 @@ def _create_package_from_definition(
     return package_obj
 
 
-def _create_functions_from_definition(definitions, package: Package):
+def _create_functions_from_definition(definitions: list[dict], package: Package):
     """Creates the functions in the package from the definition file"""
     db_functions = []
     for function_def in definitions:
@@ -293,7 +293,9 @@ def _create_functions_from_definition(definitions, package: Package):
         try:
             function_obj = Function.objects.get(package=package, name=name)
         except Function.DoesNotExist:
-            function_obj = Function(package=package, name=name)
+            function_obj = Function(
+                package=package, name=name, environment=package.environment
+            )
 
         function_obj.display_name = function_def.get("display_name")
         function_obj.summary = function_def.get("summary")

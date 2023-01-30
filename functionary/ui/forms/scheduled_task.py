@@ -61,7 +61,7 @@ class ScheduledTaskForm(ModelForm):
     def _update_function_queryset(self, environment: Environment):
         if environment:
             self.fields["function"].queryset = Function.objects.filter(
-                package__environment=environment
+                environment=environment
             )
 
     def _get_create_status_choices(self) -> list:
