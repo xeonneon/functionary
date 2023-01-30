@@ -10,7 +10,7 @@
                         <a href="{% url 'ui:build-list' %}">Build List</a>
                     </li>
                     <li class="is-active">
-                        <a href="#">{{ build.package }}</a>
+                        <a href="#">{{ build.package.render_name }}</a>
                     </li>
                 </ul>
             </nav>
@@ -20,7 +20,7 @@
                 <h1 class="title is-1">
                     <p>
                         <i class="fa fa-wrench"></i>
-                        <span>{{ build.package }}</span>
+                        <span>{{ build.package.render_name }}</span>
                         <i class="is-size-5 fa fa-info pl-4"></i>
                         <span class="is-size-5 has-text-weight-normal">{{ build.status }}</span>
                     </p>

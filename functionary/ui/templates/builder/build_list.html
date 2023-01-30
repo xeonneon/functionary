@@ -14,7 +14,7 @@
                 {% for build in page_obj %}
                     <tr>
                         <td>
-                            <a href="{% url 'ui:build-detail' build.id %}">{{ build.package }}</a>
+                            <a href="{% url 'ui:build-detail' build.id %}">{{ build.package.render_name }}</a>
                         </td>
                         <td>{{ build.status }}</td>
                         <td>{{ build.created_at }}</td>

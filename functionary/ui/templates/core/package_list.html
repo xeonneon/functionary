@@ -12,13 +12,7 @@
                 {% for package in page_obj %}
                     <tr>
                         <td>
-                            <a href="{% url 'ui:package-detail' package.id %}">
-                                {% if package.display_name %}
-                                    {{ package.display_name }}
-                                {% else %}
-                                    {{ package.name }}
-                                {% endif %}
-                            </a>
+                            <a href="{% url 'ui:package-detail' package.id %}">{{ package.render_name }}</a>
                         </td>
                         <td>{{ package.summary }}</td>
                     </tr>
