@@ -14,4 +14,4 @@ jobs:
         name: Assign new issues to Dev project
         with:
           project-url: https://github.com/orgs/beer-garden/projects/27
-          github-token: ${{ secrets.BUILDBOT_TOKEN }}
+          github-token: ${{ secrets.FUNCTIONARY_BUILDBOT_TOKEN }}
