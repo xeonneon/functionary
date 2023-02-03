@@ -1,4 +1,6 @@
-from allauth.socialaccount.providers.base import ProviderAccount
+from allauth.socialaccount import providers
+from allauth.socialaccount.models import SocialApp
+from allauth.socialaccount.providers.base import Provider, ProviderAccount
 from django import template
 
 register = template.Library()
@@ -21,3 +23,18 @@ def find_account(context, provider_id: str) -> ProviderAccount | None:
             if account.provider == provider_id:
                 return account.get_provider_account().account
     return None
+
+
+@register.simple_tag()
+def configured_providers() -> list[dict[str, Provider]]:
+    """This tag returns a list of tuples of the configured Providers.
+
+    Returns:
+        List of tuples of configured provider name and Provider
+    """
+    provider_pairs = []
+    for app in SocialApp.objects.all():
+        provider_pairs.append(
+            {"name": app.name, "provider": providers.registry.by_id(app.provider)}
+        )
+    return provider_pairs
