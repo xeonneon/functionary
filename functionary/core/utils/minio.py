@@ -13,10 +13,11 @@ from core.models import Task
 class MinioInterface:
     def __init__(self, bucket_name: str):
         self.client = Minio(
-            endpoint=f"{settings.MINIO_HOST}:{settings.MINIO_PORT}",
-            access_key=settings.MINIO_ACCESS_KEY,
-            secret_key=settings.MINIO_SECRET_KEY,
-            secure=settings.MINIO_SECURE,
+            endpoint=f"{settings.S3_HOST}:{settings.S3_PORT}",
+            access_key=settings.S3_ACCESS_KEY,
+            secret_key=settings.S3_SECRET_KEY,
+            secure=settings.S3_SECURE,
+            region=settings.S3_REGION,
         )
         self.bucket_name = bucket_name
         self._create_bucket()
@@ -63,8 +64,8 @@ class MinioInterface:
                 bucket_name=self.bucket_name,
                 object_name=filename,
                 expires=timedelta(
-                    seconds=settings.MINIO_SIGNED_URL_TIMEOUT_SECONDS,
-                    minutes=settings.MINIO_SIGNED_URL_TIMEOUT_MINUTES,
+                    seconds=settings.S3_SIGNED_URL_TIMEOUT_SECONDS,
+                    minutes=settings.S3_SIGNED_URL_TIMEOUT_MINUTES,
                 ),
             )
 
