@@ -15,6 +15,7 @@ from core.models import (
 )
 from core.utils.messaging import get_route, send_message
 from core.utils.minio import MinioInterface
+from core.utils.parameters import parameter_mapping
 
 logger = get_task_logger(__name__)
 logger.setLevel(getattr(logging, settings.LOG_LEVEL))
@@ -181,23 +182,13 @@ def _handle_file_parameters(
     Returns:
         None
     """
-    for param_name, param_info in schema.get("properties").items():
-        if param_type := param_info.get("anyOf"):
-            _update_file_parameter(param_name, param_type, parameters, environment)
-
-
-def _update_file_parameter(
-    param_name: str, schema: dict, parameters: dict, environment: Environment
-) -> None:
-    for param_meta in schema:
-        if _is_file_param(param_meta.get("format")):
+    param_map = parameter_mapping(schema)
+    for param_name, param_meta in param_map.items():
+        param_formats = [_format for _, _format in param_meta]
+        if "uri" in param_formats:
             parameters[param_name] = _get_presigned_url(
                 parameters[param_name], environment
             )
-
-
-def _is_file_param(format: str) -> bool:
-    return format == "uri"
 
 
 def _get_presigned_url(filename: str, environment: Environment) -> str:
