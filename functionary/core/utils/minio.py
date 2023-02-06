@@ -41,9 +41,10 @@ class MinioInterface:
 
     def does_file_exist(self, filename: str) -> bool:
         try:
-            return self.client.stat_object(self.bucket_name, filename)
+            _ = self.client.stat_object(self.bucket_name, filename)
+            return True 
         except S3Error:
-            return None
+            return False
 
     def get_object(self, filename: str) -> HTTPResponse:
         try:
