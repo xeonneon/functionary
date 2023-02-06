@@ -187,7 +187,7 @@ services:
     volumes:
       - registry-data:/var/lib/registry
   minio:
-    image: quay.io/minio/minio:RELEASE.2023-01-25T00-19-54Z
+    image: quay.io/minio/minio:latest
     container_name: functionary-s3
     command: server /data --console-address ":9090"
     hostname: minio
