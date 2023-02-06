@@ -42,7 +42,7 @@ class MinioInterface:
     def does_file_exist(self, filename: str) -> bool:
         try:
             _ = self.client.stat_object(self.bucket_name, filename)
-            return True 
+            return True
         except S3Error:
             return False
 
