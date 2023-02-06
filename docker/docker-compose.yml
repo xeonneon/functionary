@@ -16,9 +16,12 @@ x-environment:
   DB_USER: admin
   DB_PASSWORD: password
   DB_PORT: 5432
-  FUNCTIONARY_NETWORK: functionary-network
-  MINIO_HOST: minio
-  MINIO_PORT: 9000
+  FUNCTIONARY_NETWORK: functionary-network  # Mutually exclusive with NETWORK_MODE
+  FUNCTIONARY_NETWORK_MODE:
+  S3_HOST: minio
+  S3_PORT: 9000
+  S3_REGION:
+  S3_SECURE: false
   MINIO_ROOT_USER: ROOTUSER
   MINIO_ROOT_PASSWORD: CHANGEME123
 

@@ -64,7 +64,6 @@ class MinioInterface:
                 bucket_name=self.bucket_name,
                 object_name=filename,
                 expires=timedelta(
-                    seconds=settings.S3_SIGNED_URL_TIMEOUT_SECONDS,
                     minutes=settings.S3_SIGNED_URL_TIMEOUT_MINUTES,
                 ),
             )
