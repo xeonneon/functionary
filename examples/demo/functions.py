@@ -1,6 +1,8 @@
 import os
 import time
 
+import requests
+
 
 def output_json(input: dict):
     """Demo JSON rendering by accepting JSON input and mirroring it back out"""
@@ -28,3 +30,11 @@ def variables():
 
     print(output)
     return [{"name": n, "value": v} for n, v in os.environ.items()]
+
+
+def num_chars(file: str) -> int:
+    print(f"Fetching file from this URL: {file}")
+    request = requests.get(file)
+    if request.status_code == 200:
+        return len(request.text)
+    return 0

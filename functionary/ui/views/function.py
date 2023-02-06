@@ -74,7 +74,6 @@ def execute(request: HttpRequest) -> HttpResponse:
 
     data: QueryDict = request.POST.copy()
     func = get_object_or_404(Function, id=data.get("function_id"))
-    handle_file_parameters(env, request)
 
     form = TaskParameterForm(func, data, files=request.FILES)
 
@@ -90,6 +89,7 @@ def execute(request: HttpRequest) -> HttpResponse:
                 return_type=func.return_type,
             )
             task.clean()
+            handle_file_parameters(task, request)
             task.save()
 
             # Redirect to the newly created task:

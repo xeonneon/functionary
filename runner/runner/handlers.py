@@ -1,6 +1,7 @@
 import itertools
 import json
 import logging
+from os import getenv
 
 from docker.errors import DockerException
 
@@ -58,7 +59,7 @@ def _run_task(task):
             detach=True,
             command=run_command,
             environment=variables,
-            network_mode="functionary-network",
+            network=getenv("FUNCTIONARY_NETWORK"),
         )
     except DockerException as exc:
         return (1, f"Unable to execute function. Encountered error: {exc}", "null")

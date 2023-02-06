@@ -1,21 +1,22 @@
 from datetime import timedelta
 from io import BytesIO
-from os import getenv
 
+from django.conf import settings
 from django.http import HttpRequest
 from minio import Minio
+from minio.error import S3Error
 from urllib3.response import HTTPResponse
 
-from core.models import Environment
+from core.models import Task
 
 
 class MinioInterface:
     def __init__(self, bucket_name: str):
         self.client = Minio(
-            endpoint=f"{getenv('MINIO_HOST')}:{getenv('MINIO_PORT')}",
-            access_key=getenv("MINIO_ROOT_USER"),
-            secret_key=getenv("MINIO_ROOT_PASSWORD"),
-            secure=False,
+            endpoint=f"{settings.MINIO_HOST}:{settings.MINIO_PORT}",
+            access_key=settings.MINIO_ACCESS_KEY,
+            secret_key=settings.MINIO_SECRET_KEY,
+            secure=settings.MINIO_SECURE,
         )
         self.bucket_name = bucket_name
         self._create_bucket()
@@ -31,7 +32,7 @@ class MinioInterface:
             length=length,
         )
 
-    def get_filenames(self, filename: str) -> list[str]:
+    def get_filenames(self) -> list[str]:
         objects = self.client.list_objects(self.bucket_name)
         object_names = []
         for object in objects:
@@ -39,8 +40,10 @@ class MinioInterface:
         return object_names
 
     def does_file_exist(self, filename: str) -> bool:
-        objects = self.get_filenames(filename)
-        return filename in objects
+        try:
+            return self.client.stat_object(self.bucket_name, filename)
+        except S3Error:
+            return None
 
     def get_object(self, filename: str) -> HTTPResponse:
         try:
@@ -58,7 +61,10 @@ class MinioInterface:
                 method="GET",
                 bucket_name=self.bucket_name,
                 object_name=filename,
-                expires=timedelta(minutes=5),
+                expires=timedelta(
+                    seconds=settings.MINIO_SIGNED_URL_TIMEOUT_SECONDS,
+                    minutes=settings.MINIO_SIGNED_URL_TIMEOUT_MINUTES,
+                ),
             )
 
     def _create_bucket(self) -> None:
@@ -72,7 +78,7 @@ class MinioInterface:
 
 
 def handle_file_parameters(
-    environment: Environment,
+    task: Task,
     request: HttpRequest,
 ) -> None:
     """Uploads any files in the incoming request to an S3 bucket
@@ -83,13 +89,29 @@ def handle_file_parameters(
     would go to <environment_id>/filename
 
     Arguments:
-        environment: The environment the request was made from
+        task: The task object created as a result of the request
         request: The HttpRequest that the form came from
 
     Returns:
         None
     """
-    minio = MinioInterface(bucket_name=str(environment.id))
+    minio = MinioInterface(bucket_name=str(task.environment.id))
     if request.FILES:
-        for _, file in request.FILES.items():
-            minio.put_file(file=file.file, length=file.size, filename=file.name)
+        for param_name, file in request.FILES.items():
+            # Remove parameter prefix
+            param_name = param_name.split("-")[-1]
+            filename = generate_filename(task, param_name, file.name)
+            minio.put_file(file=file.file, length=file.size, filename=filename)
+
+
+def generate_filename(task: Task, param_name: str, filename: str) -> str:
+    """Generate a filename suitable for storage in a bucket
+
+    Generates a filename based on the task id, parameter name, and filename
+
+    Args:
+        task: The task object
+        param_name: The parameter name
+        filename: The filename
+    """
+    return f"{task.id}/{param_name}/{filename}"
