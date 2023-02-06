@@ -15,7 +15,7 @@ from django.conf import settings
 from django.db import transaction
 from django.template.loader import get_template
 from docker.errors import APIError, BuildError, DockerException
-from pydantic import Field, Json, create_model
+from pydantic import Field, FileUrl, Json, create_model
 
 from core.models import Environment, Function, Package, User
 
@@ -335,6 +335,7 @@ def _generate_function_schema(name: str, parameters) -> str:
         "string": str,
         "text": TypeVar("text", str, bytes),
         "float": float,
+        "file": TypeVar("file", FileUrl, bytes),
         "boolean": bool,
         "date": datetime.date,
         "datetime": datetime.datetime,

@@ -7,6 +7,7 @@ PARAMETER_TYPES = [
     ("string", "String"),
     ("text", "String (Long)"),
     ("float", "Float"),
+    ("file", "File"),
     ("boolean", "Boolean"),
     ("date", "Date"),
     ("datetime", "Date Time"),

@@ -6,9 +6,9 @@
     {% if form %}
         
         {% if update %}
-            <form method="post" action="{% url 'ui:scheduledtask-update' scheduledtask.id %}">
+            <form method="post" action="{% url 'ui:scheduledtask-update' scheduledtask.id %}" enctype="multipart/form-data">
         {% else %}
-            <form method="post" action="{% url 'ui:scheduledtask-create' %}">
+            <form method="post" action="{% url 'ui:scheduledtask-create' %}" enctype="multipart/form-data">
         {% endif %}
             
         {% csrf_token %}

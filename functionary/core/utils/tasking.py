@@ -5,8 +5,17 @@ from celery.utils.log import get_task_logger
 from django.conf import settings
 
 from core.celery import app
-from core.models import ScheduledTask, Task, TaskLog, TaskResult, WorkflowRunStep
+from core.models import (
+    Environment,
+    ScheduledTask,
+    Task,
+    TaskLog,
+    TaskResult,
+    WorkflowRunStep,
+)
 from core.utils.messaging import get_route, send_message
+from core.utils.minio import MinioInterface, generate_filename
+from core.utils.parameters import parameter_mapping
 
 logger = get_task_logger(__name__)
 logger.setLevel(getattr(logging, settings.LOG_LEVEL))
@@ -59,6 +68,8 @@ def publish_task(task_id: UUID) -> None:
     task = Task.objects.select_related(
         "function", "function__package", "environment"
     ).get(id=task_id)
+
+    _handle_file_parameters(task)
 
     exchange, routing_key = get_route(task)
     send_message(exchange, routing_key, "TASK_PACKAGE", _generate_task_message(task))
@@ -150,3 +161,35 @@ def _handle_workflow_run(workflow_run_step: WorkflowRunStep, task: Task) -> None
                 workflow_run.complete()
         case Task.ERROR:
             workflow_run.error()
+
+
+def _handle_file_parameters(task: Task) -> None:
+    """Update all file parameter's filenames to presigned URLs
+
+    This function will mutate all file parameters to their
+    corresponding presigned URLs. This should only be done
+    before a task is sent to the runner. The task should not
+    save the presigned URL to its database entry.
+
+    Arguments:
+        task: The task that is about to be sent to the runner
+
+    Returns:
+        None
+    """
+    environment = task.environment
+    parameters = task.parameters
+    schema: dict = task.function.schema
+
+    param_map = parameter_mapping(schema)
+    for param_name, param_meta in param_map.items():
+        param_formats = [_format for _, _format in param_meta]
+        if "uri" in param_formats:
+            filename = generate_filename(task, param_name, parameters[param_name])
+            parameters[param_name] = _get_presigned_url(filename, environment)
+
+
+def _get_presigned_url(filename: str, environment: Environment) -> str:
+    minio = MinioInterface(bucket_name=str(environment.id))
+    presigned_url = minio.get_presigned_url(filename)
+    return presigned_url

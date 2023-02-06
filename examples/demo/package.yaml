@@ -53,3 +53,15 @@ package:
         - HOME
         - USER
       parameters: []
+    - name: num_chars
+      summary: Returns the number of characters in given file
+      display_name: Number of Characters
+      description: Returns the number of characters in given file
+      return_type: integer
+      parameters:
+        - name: file
+          display_name: File
+          summary: File to measure
+          description: Input file that will be measured
+          type:  file
+          required: true

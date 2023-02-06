@@ -13,6 +13,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from core.auth import Permission
 from core.models import Environment, Function, Task
+from core.utils.minio import handle_file_parameters
 from ui.forms.tasks import TaskParameterForm, TaskParameterTemplateForm
 
 from .generic import PermissionedDetailView, PermissionedListView
@@ -73,7 +74,8 @@ def execute(request: HttpRequest) -> HttpResponse:
 
     data: QueryDict = request.POST.copy()
     func = get_object_or_404(Function, id=data.get("function_id"))
-    form = TaskParameterForm(func, data)
+
+    form = TaskParameterForm(func, data, files=request.FILES)
 
     if form.is_valid():
         # Clean the task fields before saving the Task
@@ -87,6 +89,7 @@ def execute(request: HttpRequest) -> HttpResponse:
                 return_type=func.return_type,
             )
             task.clean()
+            handle_file_parameters(task, request)
             task.save()
 
             # Redirect to the newly created task:

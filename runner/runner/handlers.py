@@ -1,6 +1,7 @@
 import itertools
 import json
 import logging
+from os import getenv
 
 from docker.errors import DockerException
 
@@ -52,13 +53,19 @@ def _run_task(task):
     logger.info("Running %s from package %s", function, package)
     docker_client = docker.from_env()
     try:
-        container = docker_client.containers.run(
-            package,
-            auto_remove=False,
-            detach=True,
-            command=run_command,
-            environment=variables,
-        )
+        kwargs = {
+            "auto_remove": False,
+            "detach": True,
+            "command": run_command,
+            "environment": variables,
+        }
+
+        if network := getenv("FUNCTIONARY_NETWORK"):
+            kwargs["network"] = network
+        elif network_mode := getenv("FUNCTIONARY_NETWORK_MODE"):
+            kwargs["network_mode"] = network_mode
+
+        container = docker_client.containers.run(package, **kwargs)
     except DockerException as exc:
         return (1, f"Unable to execute function. Encountered error: {exc}", "null")
 

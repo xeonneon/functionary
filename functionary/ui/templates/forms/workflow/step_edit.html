@@ -8,9 +8,9 @@
 
 {% block form_declaration %}
     {% if workflowstep %}
-        <form id="step-form" method="post" hx-post="{% url 'ui:workflowstep-edit' view.kwargs.workflow_pk workflowstep.pk %}" hx-target="#form-modal" hx-swap="outerHTML">
+        <form id="step-form" method="post" hx-post="{% url 'ui:workflowstep-edit' view.kwargs.workflow_pk workflowstep.pk %}" hx-target="#form-modal" hx-swap="outerHTML" enctype="multipart/form-data">
     {% else %}
-        <form id="step-form" method="post" hx-post="{% url 'ui:workflowstep-create' view.kwargs.workflow_pk %}" hx-target="#form-modal" hx-swap="outerHTML">
+        <form id="step-form" method="post" hx-post="{% url 'ui:workflowstep-create' view.kwargs.workflow_pk %}" hx-target="#form-modal" hx-swap="outerHTML" enctype="multipart/form-data">
     {% endif %}
 {% endblock form_declaration %}
 

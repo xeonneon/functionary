@@ -3,7 +3,6 @@ version: "3.5"
 x-environment:
   &environment
   DEBUG: TRUE
-  BROKER_WORKDIR: /tmp
   DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-supersecret}
   DJANGO_SETTINGS_MODULE: functionary.settings.debug
   LOG_LEVEL: DEBUG
@@ -17,6 +16,14 @@ x-environment:
   DB_USER: admin
   DB_PASSWORD: password
   DB_PORT: 5432
+  FUNCTIONARY_NETWORK: functionary-network  # Mutually exclusive with NETWORK_MODE
+  FUNCTIONARY_NETWORK_MODE:
+  S3_HOST: minio
+  S3_PORT: 9000
+  S3_REGION:
+  S3_SECURE: false
+  MINIO_ROOT_USER: ROOTUSER
+  MINIO_ROOT_PASSWORD: CHANGEME123
 
 services:
   django:
@@ -179,6 +186,20 @@ services:
       - 5000:5000
     volumes:
       - registry-data:/var/lib/registry
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: functionary-s3
+    command: server /data --console-address ":9090"
+    hostname: minio
+    environment:
+      <<: *environment
+    networks:
+      - functionary-network
+    ports:
+      - 9000:9000
+      - 9090:9090
+    volumes:
+      - file-data:/data
 
 networks:
   functionary-network:
@@ -189,3 +210,4 @@ volumes:
   rabbitmq-data:
   registry-data:
   postgresql-data:
+  file-data:
