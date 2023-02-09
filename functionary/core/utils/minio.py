@@ -5,6 +5,7 @@ from django.conf import settings
 from django.http import HttpRequest
 from minio import Minio
 from minio.error import S3Error
+from urllib3.exceptions import MaxRetryError
 from urllib3.response import HTTPResponse
 
 from core.models import Task
@@ -12,16 +13,32 @@ from core.models import Task
 
 class MinioInterface:
     def __init__(self, bucket_name: str):
-        self.client = Minio(
-            endpoint=f"{settings.S3_HOST}:{settings.S3_PORT}",
-            access_key=settings.S3_ACCESS_KEY,
-            secret_key=settings.S3_SECRET_KEY,
-            secure=settings.S3_SECURE,
-            region=settings.S3_REGION,
-        )
+        try:
+            self.client = Minio(
+                endpoint=f"{settings.S3_HOST}:{settings.S3_PORT}",
+                access_key=settings.S3_ACCESS_KEY,
+                secret_key=settings.S3_SECRET_KEY,
+                secure=settings.S3_SECURE,
+                region=settings.S3_REGION,
+            )
 
-        self.bucket_name = bucket_name
-        self._create_bucket()
+            self.bucket_name = bucket_name
+            self._create_bucket()
+        except MaxRetryError as err:
+            raise MaxRetryError(
+                err.pool, err.url, "Connection to S3 provider could not be established"
+            )
+        except S3Error as err:
+            raise S3Error(
+                err.code,
+                "Unable to authenticate with S3 provider",
+                err._resource,
+                err._request_id,
+                err._host_id,
+                err.response,
+                err._bucket_name,
+                err._object_name,
+            )
 
     def bucket_exists(self) -> bool:
         return self.client.bucket_exists(self.bucket_name)
@@ -69,14 +86,14 @@ class MinioInterface:
                 ),
             )
 
+    def delete_bucket(self) -> None:
+        if self.bucket_exists():
+            self.client.remove_bucket(self.bucket_name)
+
     def _create_bucket(self) -> None:
         if self.bucket_exists():
             return
         self.client.make_bucket(self.bucket_name)
-
-    def delete_bucket(self) -> None:
-        if self.bucket_exists():
-            self.client.remove_bucket(self.bucket_name)
 
 
 def handle_file_parameters(

@@ -10,6 +10,8 @@ from django.http import (
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
+from minio.error import S3Error
+from urllib3.exceptions import MaxRetryError
 
 from core.auth import Permission
 from core.models import Environment, Function, Task
@@ -101,6 +103,18 @@ def execute(request: HttpRequest) -> HttpResponse:
                     "The given parameters do not conform to function schema.",
                     code="invalid",
                 ),
+            )
+        except MaxRetryError as err:
+            form.add_error(
+                None,
+                ValidationError(
+                    f"{err.reason}. Unable to submit files.", code="invalid"
+                ),
+            )
+        except S3Error as err:
+            form.add_error(
+                None,
+                ValidationError(f"{err.message}.", code="invalid"),
             )
 
     args = {"form": form, "function": func}
