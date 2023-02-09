@@ -1,9 +1,15 @@
+import logging
 from time import sleep
 from typing import Callable
 
-from django.db.utils import ProgrammingError
+from django.conf import settings
+from django.db.utils import DatabaseError
 
-SLEEP_DURATION = 2
+LOG_LEVEL = settings.LOG_LEVEL
+logger = logging.getLogger(__name__)
+logger.setLevel(getattr(logging, LOG_LEVEL))
+
+SLEEP_DURATION = 5
 
 
 def run(command: Callable) -> None:
@@ -24,6 +30,10 @@ def run(command: Callable) -> None:
         try:
             command()
             is_ready = True
-        except ProgrammingError:
-            print("Migrations for the given command have not been run yet.")
+        except DatabaseError:
+            logger.error(
+                f"Database is not ready. "
+                f"Ensure database is available and migrations have been run. "
+                f"Retrying command in {SLEEP_DURATION} seconds."
+            )
             sleep(SLEEP_DURATION)
