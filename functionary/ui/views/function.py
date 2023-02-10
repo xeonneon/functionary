@@ -10,12 +10,10 @@ from django.http import (
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
-from minio.error import S3Error
-from urllib3.exceptions import MaxRetryError
 
 from core.auth import Permission
 from core.models import Environment, Function, Task
-from core.utils.minio import handle_file_parameters
+from core.utils.minio import S3ConnectionError, handle_file_parameters
 from ui.forms.tasks import TaskParameterForm, TaskParameterTemplateForm
 
 from .generic import PermissionedDetailView, PermissionedListView
@@ -69,6 +67,7 @@ class FunctionDetailView(PermissionedDetailView):
 def execute(request: HttpRequest) -> HttpResponse:
     func = None
     form = None
+    status_code = None
 
     env = Environment.objects.get(id=request.session.get("environment_id"))
     if not request.user.has_perm(Permission.TASK_CREATE, env):
@@ -97,6 +96,7 @@ def execute(request: HttpRequest) -> HttpResponse:
             # Redirect to the newly created task:
             return HttpResponseRedirect(reverse("ui:task-detail", args=(task.id,)))
         except ValidationError:
+            status_code = 400
             form.add_error(
                 None,
                 ValidationError(
@@ -104,21 +104,15 @@ def execute(request: HttpRequest) -> HttpResponse:
                     code="invalid",
                 ),
             )
-        except MaxRetryError as err:
+        except S3ConnectionError as err:
+            status_code = 503
             form.add_error(
                 None,
-                ValidationError(
-                    f"{err.reason}. Unable to submit files.", code="invalid"
-                ),
-            )
-        except S3Error as err:
-            form.add_error(
-                None,
-                ValidationError(f"{err.message}.", code="invalid"),
+                ValidationError(f"{err}", code="invalid"),
             )
 
     args = {"form": form, "function": func}
-    return render(request, "core/function_detail.html", args)
+    return render(request, "core/function_detail.html", args, status=status_code)
 
 
 @require_GET

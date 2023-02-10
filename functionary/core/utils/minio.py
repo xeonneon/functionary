@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 from io import BytesIO
 
@@ -10,8 +11,36 @@ from urllib3.response import HTTPResponse
 
 from core.models import Task
 
+LOG_LEVEL = settings.LOG_LEVEL
+logger = logging.getLogger(__name__)
+logger.setLevel(getattr(logging, LOG_LEVEL))
+
+
+class S3ConnectionError(Exception):
+    _err_msg = (
+        "Unable to upload file. Please try again. "
+        "If the problem persists, contact your system administrator."
+    )
+
+    def __init__(self, msg: str = _err_msg, *args, **kwargs):
+        super().__init__(msg, *args, **kwargs)
+
 
 class MinioInterface:
+    """Wrapper class around MinIO API operations
+
+    This interface provides simplified functions for interacting with
+    MinIO, or any other S3 API compatible provider.
+
+    Attributes:
+        client: The MinIO client that communicates with the S3 provider
+        bucket_name: The name of the bucket the client will interact with
+
+    Raises:
+        S3ConnectionError: Raised when client is unable to connect or communicate
+            with the configured S3 provider.
+    """
+
     def __init__(self, bucket_name: str):
         try:
             self.client = Minio(
@@ -21,24 +50,18 @@ class MinioInterface:
                 secure=settings.S3_SECURE,
                 region=settings.S3_REGION,
             )
-
+            logger.debug("Successfully connected to S3 provider.")
             self.bucket_name = bucket_name
             self._create_bucket()
-        except MaxRetryError as err:
-            raise MaxRetryError(
-                err.pool, err.url, "Connection to S3 provider could not be established"
+        except MaxRetryError:
+            logger.error(
+                f"Connection to {settings.S3_HOST}:{settings.S3_PORT} could "
+                "not be established."
             )
+            raise S3ConnectionError()
         except S3Error as err:
-            raise S3Error(
-                err.code,
-                "Unable to authenticate with S3 provider",
-                err._resource,
-                err._request_id,
-                err._host_id,
-                err.response,
-                err._bucket_name,
-                err._object_name,
-            )
+            logger.error(f"Error communicating with S3 provider: {err.message}")
+            raise S3ConnectionError()
 
     def bucket_exists(self) -> bool:
         return self.client.bucket_exists(self.bucket_name)
@@ -92,7 +115,9 @@ class MinioInterface:
 
     def _create_bucket(self) -> None:
         if self.bucket_exists():
+            logger.debug(f"{self.bucket_name} bucket already exists.")
             return
+        logger.debug(f"Creating new bucket {self.bucket_name}")
         self.client.make_bucket(self.bucket_name)
 
 
@@ -113,6 +138,10 @@ def handle_file_parameters(
 
     Returns:
         None
+
+    Raises:
+        S3ConnectionError: Raised when client is unable to connect or communicate
+            with the configured S3 provider.
     """
     if request.FILES:
         minio = MinioInterface(bucket_name=str(task.environment.id))
