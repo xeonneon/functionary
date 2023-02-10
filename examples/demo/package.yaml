@@ -65,6 +65,24 @@ package:
           description: Input file that will be measured
           type: file
           required: true
+    - name: num_chars_api
+      summary: Returns the number of characters in given file
+      display_name: Number of Characters API test
+      description: Returns the number of characters in given file
+      return_type: integer
+      parameters:
+        - name: function
+          display_name: Function
+          summary: File to measure
+          description: Input file that will be measured
+          type: file
+          required: true
+        - name: other_param
+          display_name: Other Param
+          summary: Other param argument
+          description: Prints parameter
+          type: text
+          required: true
     - name: parameter_types
       summary: Test for parameter type form rendering and passthrough values
       display_name: Parameter Types

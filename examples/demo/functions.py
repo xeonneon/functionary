@@ -67,3 +67,13 @@ def parameter_types(
         {"parameter": "string_", "type": type(string_).__name__, "value": string_},
         {"parameter": "text_", "type": type(text_).__name__, "value": text_},
     ]
+
+
+def num_chars_api(function: str, other_param: str) -> int:
+    """Test for API file param"""
+    print(f"Fetching function from this URL: {function}")
+    print(f"Here is the other parameter: {other_param}")
+    request = requests.get(function)
+    if request.status_code == 200:
+        return len(request.text)
+    return 0
