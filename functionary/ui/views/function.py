@@ -104,7 +104,7 @@ def execute(request: HttpRequest) -> HttpResponse:
                     code="invalid",
                 ),
             )
-        except S3ConnectionError as err:
+        except S3ConnectionError:
             status_code = 503
             form.add_error(
                 None,
