@@ -17,13 +17,7 @@ logger.setLevel(getattr(logging, LOG_LEVEL))
 
 
 class S3ConnectionError(Exception):
-    _err_msg = (
-        "Unable to upload file. Please try again. "
-        "If the problem persists, contact your system administrator."
-    )
-
-    def __init__(self, msg: str = _err_msg, *args, **kwargs):
-        super().__init__(msg, *args, **kwargs)
+    pass
 
 
 class MinioInterface:
@@ -53,15 +47,14 @@ class MinioInterface:
             logger.debug("Successfully connected to S3 provider.")
             self.bucket_name = bucket_name
             self._create_bucket()
-        except MaxRetryError:
-            logger.error(
-                f"Connection to {settings.S3_HOST}:{settings.S3_PORT} could "
-                "not be established."
-            )
-            raise S3ConnectionError()
+        except MaxRetryError as err:
+            msg = f"Connection to S3 provider could not be established. Error: {err}"
+            logger.error(msg)
+            raise S3ConnectionError(msg)
         except S3Error as err:
-            logger.error(f"Error communicating with S3 provider: {err.message}")
-            raise S3ConnectionError()
+            msg = f"Error communicating with S3 provider: {err}"
+            logger.error(msg)
+            raise S3ConnectionError(msg)
 
     def bucket_exists(self) -> bool:
         return self.client.bucket_exists(self.bucket_name)

@@ -108,7 +108,10 @@ def execute(request: HttpRequest) -> HttpResponse:
             status_code = 503
             form.add_error(
                 None,
-                ValidationError(f"{err}", code="invalid"),
+                (
+                    "Unable to upload file. Please try again. "
+                    "If the problem persists, contact your system administrator."
+                ),
             )
 
     args = {"form": form, "function": func}
