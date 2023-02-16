@@ -33,8 +33,9 @@ def variables():
     return [{"name": n, "value": v} for n, v in os.environ.items()]
 
 
-def num_chars(file: str) -> int:
+def num_chars(file: str, other_param: str) -> int:
     print(f"Fetching file from this URL: {file}")
+    print(f"Here is the other parameter: {other_param}")
     request = requests.get(file)
     if request.status_code == 200:
         return len(request.text)
@@ -67,13 +68,3 @@ def parameter_types(
         {"parameter": "string_", "type": type(string_).__name__, "value": string_},
         {"parameter": "text_", "type": type(text_).__name__, "value": text_},
     ]
-
-
-def num_chars_api(function: str, other_param: str) -> int:
-    """Test for API file param"""
-    print(f"Fetching function from this URL: {function}")
-    print(f"Here is the other parameter: {other_param}")
-    request = requests.get(function)
-    if request.status_code == 200:
-        return len(request.text)
-    return 0

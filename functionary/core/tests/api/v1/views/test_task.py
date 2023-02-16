@@ -1,25 +1,26 @@
 import json
 
 import pytest
+from django.test.client import Client
 from django.urls import reverse
 
-from core.models import Function, Package, Task, TaskResult, Team
+from core.models import Environment, Function, Package, Task, TaskResult, Team
 from core.utils.parameter import PARAMETER_TYPE
 
 
 @pytest.fixture
-def environment():
+def environment() -> Environment:
     team = Team.objects.create(name="team")
     return team.environments.get()
 
 
 @pytest.fixture
-def package(environment):
+def package(environment) -> Package:
     return Package.objects.create(name="testpackage", environment=environment)
 
 
 @pytest.fixture
-def function(package):
+def function(package) -> Function:
     _function = Function.objects.create(
         name="testfunction",
         package=package,
@@ -32,7 +33,7 @@ def function(package):
 
 
 @pytest.fixture
-def task(function, admin_user):
+def task(function, admin_user) -> Task:
     return Task.objects.create(
         function=function,
         environment=function.package.environment,
@@ -42,18 +43,15 @@ def task(function, admin_user):
 
 
 @pytest.fixture
-def request_headers(environment):
+def request_headers(environment: Environment) -> dict:
     return {"HTTP_X_ENVIRONMENT_ID": str(environment.id)}
 
 
-def test_create(admin_client, function, request_headers):
+def test_create(admin_client: Client, function: Function, request_headers: dict):
     """Create a Task"""
     url = reverse("task-list")
 
-    task_input = {
-        "function": str(function.id),
-        "parameters": {"prop1": 5},
-    }
+    task_input = {"function": str(function.id), "parameters": {"prop1": 5}}
     response = admin_client.post(
         url, data=task_input, content_type="application/json", **request_headers
     )
@@ -65,7 +63,7 @@ def test_create(admin_client, function, request_headers):
 
 
 def test_create_returns_400_for_invalid_parameters(
-    admin_client, function, request_headers
+    admin_client: Client, function: Function, request_headers: dict
 ):
     """Return a 400 for invalid tasking parameters"""
     url = reverse("task-list")
@@ -82,7 +80,7 @@ def test_create_returns_400_for_invalid_parameters(
     assert not Task.objects.filter(function=function).exists()
 
 
-def test_no_result_returns_404(admin_client, task, request_headers):
+def test_no_result_returns_404(admin_client: Client, task: Task, request_headers: dict):
     """The task result is returned as the correct type"""
 
     url = f"{reverse('task-list')}{task.id}/result/"
@@ -91,7 +89,9 @@ def test_no_result_returns_404(admin_client, task, request_headers):
     assert response.status_code == 404
 
 
-def test_result_type_is_preserved(admin_client, task, request_headers):
+def test_result_type_is_preserved(
+    admin_client: Client, task: Task, request_headers: dict
+):
     """The task result is returned as the correct type"""
     url = f"{reverse('task-list')}{task.id}/result/"
 

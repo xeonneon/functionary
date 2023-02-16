@@ -11,6 +11,7 @@ from drf_spectacular.utils import (
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
+from rest_framework.parsers import JSONParser, MultiPartParser
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -42,6 +43,7 @@ class TaskViewSet(
     """View for creating and retrieving tasks"""
 
     queryset = Task.objects.all()
+    parser_classes = [MultiPartParser, JSONParser]
     serializer_class = TaskSerializer
     permission_classes = [HasEnvironmentPermissionForAction]
 
@@ -59,10 +61,7 @@ class TaskViewSet(
             "Execute a function. The function to be executed can be defined either "
             "by supplying function as a string uuid, or function_name and "
             "package_name. "
-            "In order to submit Tasks that take in file parameters, you must submit "
-            "requests to the API endpoint through the command line, and prefix the "
-            "file parameters with `file.`. The file parameters should not be placed "
-            "in the parameters argument. For example, "
+            "An example usage of parameters is as follows: "
             "`-F 'function=1e8a7097-33b6-4ec4-87fc-52b7079caa76' "
             "-F 'file.function=@/home/ubuntu/dev/functionary/README.md' "
             '-F \'parameters={"other_param": "hello world"}\'`'
@@ -81,16 +80,7 @@ class TaskViewSet(
         parameters=HEADER_PARAMETERS,
     )
     def create(self, request: Request, *args, **kwargs):
-        if not request.data.get("parameters"):
-            request.data["parameters"] = {}
-        else:
-            request.data["parameters"] = json.loads(request.data["parameters"])
-
-        # Wrap items in list to avoid dictionary changed size error
-        for param_name, _ in list(request.FILES.items()):
-            _handle_file_parameters(request, param_name)
-
-        request.data["parameters"] = json.dumps(request.data["parameters"])
+        _handle_file_parameters(request)
 
         request_serializer: Union[
             TaskCreateByIdSerializer, TaskCreateByNameSerializer
@@ -104,8 +94,10 @@ class TaskViewSet(
         )
 
         response_serializer = TaskCreateResponseSerializer(request_serializer.instance)
+
         if request.FILES:
             task = Task.objects.get(id=response_serializer.instance.id)
+            request.data["parameters"] = json.loads(request.data["parameters"])
             handle_file_parameters(task, request)
 
         headers = self.get_success_headers(response_serializer.data)
@@ -147,7 +139,29 @@ class TaskViewSet(
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-def _handle_file_parameters(request: Request, param_name: str) -> None:
+def _handle_file_parameters(request: Request) -> None:
+    """Mutate the file parameters passed to the API
+
+    Arguments:
+        request: The originating API request
+
+    Returns:
+        None
+    """
+    if request.FILES:
+        if not request.data.get("parameters"):
+            request.data["parameters"] = {}
+        else:
+            request.data["parameters"] = json.loads(request.data["parameters"])
+
+        # Wrap items in list to avoid dictionary changed size error
+        for param_name, _ in list(request.FILES.items()):
+            _format_file_parameters(request, param_name)
+
+        request.data["parameters"] = json.dumps(request.data["parameters"])
+
+
+def _format_file_parameters(request: Request, param_name: str) -> None:
     """Handle file parameters passed in to the API
 
     Removes files from the `request.data`, removes the `file.` prefix to
