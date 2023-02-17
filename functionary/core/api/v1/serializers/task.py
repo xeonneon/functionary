@@ -1,7 +1,10 @@
 """ Task serializers """
+from collections import OrderedDict
+
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
+from core.api.v1.utils import parse_parameters
 from core.models import Function, Task
 
 
@@ -19,6 +22,11 @@ class TaskCreateByIdSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ["function", "parameters"]
+
+    def to_internal_value(self, data) -> OrderedDict:
+        parse_parameters(data)
+        ret = super().to_internal_value(data)
+        return ret
 
     def create(self, validated_data):
         """Custom create that calls clean() on the task instance"""
@@ -40,6 +48,11 @@ class TaskCreateByNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ["function_name", "package_name", "parameters"]
+
+    def to_internal_value(self, data) -> OrderedDict:
+        parse_parameters(data)
+        ret = super().to_internal_value(data)
+        return ret
 
     def create(self, validated_data):
         """Custom create that calls clean() on the task instance"""

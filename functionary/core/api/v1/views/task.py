@@ -1,8 +1,6 @@
-import json
 from typing import Union
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from drf_spectacular.utils import (
     PolymorphicProxySerializer,
     extend_schema,
@@ -25,9 +23,12 @@ from core.api.v1.serializers import (
     TaskResultSerializer,
     TaskSerializer,
 )
+from core.api.v1.utils import PREFIX, SEPARATOR, get_parameter_name
 from core.api.viewsets import EnvironmentGenericViewSet
 from core.models import Task, TaskResult
 from core.utils.minio import handle_file_parameters
+
+RENDER_PREFIX = f"{PREFIX}{SEPARATOR}".replace("\\", "")
 
 
 @extend_schema_view(
@@ -43,7 +44,7 @@ class TaskViewSet(
     """View for creating and retrieving tasks"""
 
     queryset = Task.objects.all()
-    parser_classes = [MultiPartParser, JSONParser]
+    parser_classes = [JSONParser, MultiPartParser]
     serializer_class = TaskSerializer
     permission_classes = [HasEnvironmentPermissionForAction]
 
@@ -61,10 +62,12 @@ class TaskViewSet(
             "Execute a function. The function to be executed can be defined either "
             "by supplying function as a string uuid, or function_name and "
             "package_name. "
-            "An example usage of parameters is as follows: "
-            "`-F 'function=1e8a7097-33b6-4ec4-87fc-52b7079caa76' "
-            "-F 'file.function=@/home/ubuntu/dev/functionary/README.md' "
-            '-F \'parameters={"other_param": "hello world"}\'`'
+            "Parameters can be passed to the API either by prefixing them with "
+            f"`{RENDER_PREFIX}`, or placing them inside a `parameters` JSON "
+            "string. An example usage of parameters is as follows: "
+            "`-F 'param.file=@/path/to/README.md'` "
+            "`-F 'param.a'=5 'param.b'=20` "
+            '`-F \'parameters={"hello": "world"}\'`'
         ),
         request=PolymorphicProxySerializer(
             component_name="TaskCreate",
@@ -80,25 +83,25 @@ class TaskViewSet(
         parameters=HEADER_PARAMETERS,
     )
     def create(self, request: Request, *args, **kwargs):
-        _handle_file_parameters(request)
+        data = request.data
+
+        # Remove list elements that wrap singular values when multipart content
+        if request.content_type != "application/json":
+            data = request.data.dict()
 
         request_serializer: Union[
             TaskCreateByIdSerializer, TaskCreateByNameSerializer
-        ] = self.get_serializer(data=request.data)
+        ] = self.get_serializer(data=data)
 
         request_serializer.is_valid(raise_exception=True)
 
         request_serializer.save(
-            creator=self.request.user,
-            environment=self.get_environment(),
+            creator=self.request.user, environment=self.get_environment()
         )
 
-        response_serializer = TaskCreateResponseSerializer(request_serializer.instance)
+        _handle_file_parameters(request, request_serializer)
 
-        if request.FILES:
-            task = Task.objects.get(id=response_serializer.instance.id)
-            request.data["parameters"] = json.loads(request.data["parameters"])
-            handle_file_parameters(task, request)
+        response_serializer = TaskCreateResponseSerializer(request_serializer.instance)
 
         headers = self.get_success_headers(response_serializer.data)
 
@@ -139,44 +142,26 @@ class TaskViewSet(
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-def _handle_file_parameters(request: Request) -> None:
-    """Mutate the file parameters passed to the API
+def _handle_file_parameters(
+    request: Request,
+    request_serializer: Union[TaskCreateByIdSerializer, TaskCreateByNameSerializer],
+) -> None:
+    """Mutate the file parameter names passed to the API
 
     Arguments:
         request: The originating API request
+        request_serializer: The serializer that generated the task for the request
 
     Returns:
         None
     """
-    if request.FILES:
-        if not request.data.get("parameters"):
-            request.data["parameters"] = {}
-        else:
-            request.data["parameters"] = json.loads(request.data["parameters"])
+    if not request.FILES:
+        return
 
-        # Wrap items in list to avoid dictionary changed size error
-        for param_name, _ in list(request.FILES.items()):
-            _format_file_parameters(request, param_name)
+    # Wrap items in list to avoid dictionary changed size error
+    for param_name, _ in list(request.FILES.items()):
+        if param := get_parameter_name(param_name):
+            request.FILES[param.group(2)] = request.FILES.pop(param_name)[0]
 
-        request.data["parameters"] = json.dumps(request.data["parameters"])
-
-
-def _format_file_parameters(request: Request, param_name: str) -> None:
-    """Handle file parameters passed in to the API
-
-    Removes files from the `request.data`, removes the `file.` prefix to
-    file parameters, and places the file parameters into the parameters
-    field in the `request.data`
-
-    Arguments:
-        request: The originating API request
-        param_name: The name of the file parameter
-
-    Returns:
-        None
-    """
-    file: InMemoryUploadedFile = request.FILES.get(param_name)
-    file_param_name = param_name.split("file.")[-1]
-    request.FILES[file_param_name] = request.FILES.pop(param_name)[0]
-    request.data["parameters"][file_param_name] = file.name
-    request.data.pop(param_name)
+    task = Task.objects.get(id=request_serializer.instance.id)
+    handle_file_parameters(task, request)
