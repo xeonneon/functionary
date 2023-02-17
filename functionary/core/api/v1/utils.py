@@ -26,10 +26,6 @@ def parse_parameters(values: OrderedDict) -> None:
 
         values["parameters"][valid_param.group(2)] = value
 
-    # Dump parameters to JSON string for validation
-    # if values.get("parameters"):
-    #     values["parameters"] = json.dumps(values["parameters"])
-
 
 def get_parameter_name(parameter: str) -> Union[re.Match, None]:
     return r.match(parameter)
