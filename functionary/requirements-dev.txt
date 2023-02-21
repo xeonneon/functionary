@@ -25,7 +25,7 @@ coverage==7.1.0
     # via -r requirements-dev.in
 cssbeautifier==1.14.7
     # via djlint
-django==4.1.6
+django==4.1.7
     # via
     #   -c requirements.txt
     #   django-debug-toolbar

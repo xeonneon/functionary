@@ -1,13 +1,14 @@
 {% csrf_token %}
-<span class="icon"><i class="fa fa-lg fa-building"></i></span>&nbsp;
 {% with request.session.environment_id as environment_id %}
     <select id="env_select"
             name="environment_id"
-            class="dropdown environment-select"
+            aria-label="Environment select"
+            class="form-select form-select-md bg-panel text-light border-0"
+            role="button"
             hx-trigger="change"
             hx-post="{% url 'ui:set-environment' %}"
             hx-swap="none">
-        <option value="-1">
+        <option disabled value="-1">
             Choose
         </option>
         {% for team, envs in environments.items %}

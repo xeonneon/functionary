@@ -7,7 +7,9 @@ DEBUG = True
 INSTALLED_APPS += ["debug_toolbar"]
 
 # Note: Order of MIDDLEWARE content matters
-MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]
+MIDDLEWARE += [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+]
 
 
 # Docker specific method for setting INTERNAL_IPS

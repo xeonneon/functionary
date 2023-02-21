@@ -148,3 +148,19 @@ use the host name and port number appropriate to your setup.
 - [Browsable API](http://localhost:8000/api/v1)
 - [Swagger](http://localhost:8000/api/docs/swagger)
 - [ReDoc](http://localhost:8000/api/docs/redoc)
+
+## Compile Custom CSS
+
+The theme colors and other CSS are handled by Bootstrap and customized via Sass
+overrides. They exist in `ui/scss/custom.scss`. These overrides along with all
+the other Bootstrap defaults are compiled into CSS which is then used by the
+app. Compiling the Sass files into CSS files is handled by a bash script. This
+script downloads Bootstrap, compiles our custom CSS using our defined overrides
+over the Bootstrap base CSS, and then removes any downloaded files.
+
+Then, simply use the following command to compile the Sass files. The output
+file is used directly in the HTML files.
+
+```bash
+bash ./ui/scss/compile_scss.sh
+```
