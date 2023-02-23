@@ -9,7 +9,7 @@ from drf_spectacular.utils import (
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
-from rest_framework.parsers import JSONParser, MultiPartParser
+from rest_framework.parsers import MultiPartParser
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -44,7 +44,7 @@ class TaskViewSet(
     """View for creating and retrieving tasks"""
 
     queryset = Task.objects.all()
-    parser_classes = [JSONParser, MultiPartParser]
+    parser_classes = [MultiPartParser]
     serializer_class = TaskSerializer
     permission_classes = [HasEnvironmentPermissionForAction]
 
@@ -64,9 +64,11 @@ class TaskViewSet(
             "package_name. "
             "Parameters can be passed to the API either by prefixing them with "
             f"`{RENDER_PREFIX}`, or placing them inside a `parameters` JSON "
-            "string. An example usage of parameters is as follows: "
+            "string. Prefixed parameters will **override** duplicate parameters "
+            "inside the parameters JSON string. "
+            "An example usage of parameters is as follows: "
             "`-F 'param.file=@/path/to/README.md'` "
-            "`-F 'param.a'=5 'param.b'=20` "
+            "`-F 'param.some_int'=5 'param.b'=20` "
             '`-F \'parameters={"hello": "world"}\'`'
         ),
         request=PolymorphicProxySerializer(
@@ -86,8 +88,7 @@ class TaskViewSet(
         data = request.data
 
         # Remove list elements that wrap singular values when multipart content
-        if request.content_type != "application/json":
-            data = request.data.dict()
+        data = request.data.dict()
 
         request_serializer: Union[
             TaskCreateByIdSerializer, TaskCreateByNameSerializer
@@ -164,4 +165,8 @@ def _handle_file_parameters(
             request.FILES[param.group(2)] = request.FILES.pop(param_name)[0]
 
     task = Task.objects.get(id=request_serializer.instance.id)
+    _upload_files(task, request)
+
+
+def _upload_files(task: Task, request: Request) -> None:
     handle_file_parameters(task, request)

@@ -4,7 +4,7 @@ from collections import OrderedDict
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
-from core.api.v1.utils import parse_parameters
+from core.api.v1.utils import cast_parameters, parse_parameters
 from core.models import Function, Task
 
 
@@ -26,6 +26,7 @@ class TaskCreateByIdSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data) -> OrderedDict:
         parse_parameters(data)
         ret = super().to_internal_value(data)
+        cast_parameters(ret)
         return ret
 
     def create(self, validated_data):
@@ -52,6 +53,7 @@ class TaskCreateByNameSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data) -> OrderedDict:
         parse_parameters(data)
         ret = super().to_internal_value(data)
+        cast_parameters(ret)
         return ret
 
     def create(self, validated_data):
