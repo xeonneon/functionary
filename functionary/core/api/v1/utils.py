@@ -33,7 +33,7 @@ def parse_parameters(values: OrderedDict) -> None:
 
 
 def cast_parameters(values: OrderedDict) -> None:
-    """Parent method to cast parameter necessary types"""
+    """Parent method to cast parameters to necessary types"""
     _cast_json_parameters(values)
 
 
