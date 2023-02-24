@@ -64,6 +64,9 @@ def _cast_json_parameters(values: OrderedDict) -> None:
 
     for json_param in json_params:
         try:
+            if not values["parameters"].get(json_param.name):
+                continue
+
             if type(values["parameters"][json_param.name]) == dict:
                 continue
 

@@ -41,7 +41,9 @@ def json_function(package: Package) -> Function:
         environment=package.environment,
     )
 
-    _function.parameters.create(name="prop1", parameter_type=PARAMETER_TYPE.JSON)
+    _function.parameters.create(
+        name="prop1", parameter_type=PARAMETER_TYPE.JSON, required=True
+    )
 
     return _function
 
@@ -279,6 +281,16 @@ def test_create_returns_400_for_invalid_parameters(
 
     assert response.status_code == 400
     assert task_id is None
+
+    task_input = {
+        "function_name": json_function.name,
+        "package_name": package.name,
+    }
+
+    response = admin_client.post(
+        url, data=task_input, content_type=MULTIPART_CONTENT, **request_headers
+    )
+    assert response.status_code == 400
 
 
 def test_no_result_returns_404(admin_client: Client, task: Task, request_headers: dict):
