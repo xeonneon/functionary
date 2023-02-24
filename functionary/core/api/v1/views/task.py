@@ -65,11 +65,7 @@ class TaskViewSet(
             "Parameters can be passed to the API either by prefixing them with "
             f"`{RENDER_PREFIX}`, or placing them inside a `parameters` JSON "
             "string. Prefixed parameters will **override** duplicate parameters "
-            "inside the parameters JSON string. "
-            "An example usage of parameters is as follows: "
-            "`-F 'param.file=@/path/to/README.md'` "
-            "`-F 'param.some_int'=5 'param.b'=20` "
-            '`-F \'parameters={"hello": "world"}\'`'
+            "inside the parameters JSON string."
         ),
         request=PolymorphicProxySerializer(
             component_name="TaskCreate",
@@ -160,9 +156,9 @@ def _handle_file_parameters(
         return
 
     # Wrap items in list to avoid dictionary changed size error
-    for param_name, _ in list(request.FILES.items()):
-        if param := get_parameter_name(param_name):
-            request.FILES[param.group(2)] = request.FILES.pop(param_name)[0]
+    for param, _ in list(request.FILES.items()):
+        if param_name := get_parameter_name(param):
+            request.FILES[param_name] = request.FILES.pop(param)[0]
 
     task = Task.objects.get(id=request_serializer.instance.id)
     _upload_files(task, request)

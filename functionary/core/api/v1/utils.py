@@ -13,7 +13,7 @@ from core.utils.parameter import PARAMETER_TYPE
 PREFIX = "param"
 SEPARATOR = r"\."
 
-r = re.compile(rf"^({PREFIX}){SEPARATOR}(\w+)$")
+param_name_format = re.compile(rf"^({PREFIX}){SEPARATOR}(\w+)$")
 
 
 def parse_parameters(values: OrderedDict) -> None:
@@ -22,14 +22,14 @@ def parse_parameters(values: OrderedDict) -> None:
 
     # Avoid dictionary changed size error by wrapping items in list
     for param, _ in list(values.items()):
-        if not (valid_param := get_parameter_name(param)):
+        if not (valid_param_name := get_parameter_name(param)):
             continue
 
         value = values.pop(param)
         if type(value) == InMemoryUploadedFile:
             value = value.name
 
-        values["parameters"][valid_param.group(2)] = value
+        values["parameters"][valid_param_name] = value
 
 
 def cast_parameters(values: OrderedDict) -> None:
@@ -37,9 +37,11 @@ def cast_parameters(values: OrderedDict) -> None:
     _cast_json_parameters(values)
 
 
-def get_parameter_name(parameter: str) -> Union[re.Match, None]:
-    """Return match if parameter name is of valid format"""
-    return r.match(parameter)
+def get_parameter_name(parameter: str) -> Union[str, None]:
+    """Return parameter name if parameter format is valid"""
+    if not (param_name := param_name_format.match(parameter)):
+        return None
+    return param_name.group(2)
 
 
 def _cast_json_parameters(values: OrderedDict) -> None:
@@ -54,13 +56,11 @@ def _cast_json_parameters(values: OrderedDict) -> None:
     Raises:
         ValidationError: When a JSON parameter is not valid JSON
     """
-    function = _get_function(values)
+    function: Function = values.get("function")
 
-    json_params: list[FunctionParameter] = [
-        param
-        for param in function.parameters.all()
-        if param.parameter_type == PARAMETER_TYPE.JSON
-    ]
+    json_params: list[FunctionParameter] = function.parameters.filter(
+        parameter_type=PARAMETER_TYPE.JSON
+    )
 
     for json_param in json_params:
         try:
@@ -74,36 +74,6 @@ def _cast_json_parameters(values: OrderedDict) -> None:
             exception_map = {json_param.name: err.msg}
             exc = ValidationError(exception_map)
             raise serializers.ValidationError(serializers.as_serializer_error(exc))
-
-
-def _get_function(values: OrderedDict) -> Function:
-    """Get the function from the internal values
-
-    Fetch the Function object from the values dictionary. If the `function` key
-    is not present, then we know the function name and package name serializer
-    was used. Since that serializer does not substitute the Function before
-    it's create method, we must fetch the function ourselves.
-
-    Args:
-        values: An ordered dict containing the values passed to the serializer
-
-    Returns:
-        function: The function object
-
-    Raises:
-        ValidationError: If the function was not found
-    """
-    try:
-        if not (function := values.get("function")):
-            function: Function = Function.objects.get(
-                name=values.get("function_name"),
-                package__name=values.get("package_name"),
-            )
-        return function
-    except Function.DoesNotExist as err:
-        exception_map = {"function_name": err}
-        exc = ValidationError(exception_map)
-        raise serializers.ValidationError(serializers.as_serializer_error(exc))
 
 
 def _update_parameter_field_type(values: OrderedDict) -> None:

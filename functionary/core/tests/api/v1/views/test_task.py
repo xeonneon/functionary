@@ -1,4 +1,5 @@
 import json
+from io import BytesIO
 
 import pytest
 from django.test.client import MULTIPART_CONTENT, Client
@@ -161,14 +162,14 @@ def test_create_file_task(
 
     mocker.patch("core.api.v1.views.task._upload_files", mock_file_upload)
 
-    with open("core/tests/api/v1/views/test_text.txt", "rb") as f:
-        file_function_input = {"function": str(file_function.id), "prop1": f}
-        response = admin_client.post(
-            url,
-            data=file_function_input,
-            content_type=MULTIPART_CONTENT,
-            **request_headers,
-        )
+    example_file = BytesIO(b"Hello World!")
+    file_function_input = {"function": str(file_function.id), "prop1": example_file}
+    response = admin_client.post(
+        url,
+        data=file_function_input,
+        content_type=MULTIPART_CONTENT,
+        **request_headers,
+    )
 
     task_id = response.data.get("id")
 
