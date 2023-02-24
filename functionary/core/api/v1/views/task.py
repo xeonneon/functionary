@@ -1,14 +1,15 @@
 from typing import Union
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ValidationError as DjangoValidationError
 from drf_spectacular.utils import (
     PolymorphicProxySerializer,
     extend_schema,
     extend_schema_view,
 )
-from rest_framework import mixins, status
+from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.parsers import MultiPartParser
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -92,13 +93,21 @@ class TaskViewSet(
 
         request_serializer.is_valid(raise_exception=True)
 
-        request_serializer.save(
-            creator=self.request.user, environment=self.get_environment()
+        # TODO: Add API error handling when file upload fails.
+        # Don't save file if upload fails.
+        task = Task(
+            creator=self.request.user,
+            environment=self.get_environment(),
+            **request_serializer.validated_data,
         )
+        try:
+            task.clean()
+            _handle_file_parameters(request, task)
+            task.save()
+        except (ValidationError, DjangoValidationError) as err:
+            raise serializers.ValidationError(serializers.as_serializer_error(err))
 
-        _handle_file_parameters(request, request_serializer)
-
-        response_serializer = TaskCreateResponseSerializer(request_serializer.instance)
+        response_serializer = TaskCreateResponseSerializer(task)
 
         headers = self.get_success_headers(response_serializer.data)
 
@@ -141,13 +150,13 @@ class TaskViewSet(
 
 def _handle_file_parameters(
     request: Request,
-    request_serializer: Union[TaskCreateByIdSerializer, TaskCreateByNameSerializer],
+    task: Task,
 ) -> None:
     """Mutate the file parameter names passed to the API
 
     Arguments:
         request: The originating API request
-        request_serializer: The serializer that generated the task for the request
+        task: The Task object created as a result of the request
 
     Returns:
         None
@@ -160,7 +169,6 @@ def _handle_file_parameters(
         if param_name := get_parameter_name(param):
             request.FILES[param_name] = request.FILES.pop(param)[0]
 
-    task = Task.objects.get(id=request_serializer.instance.id)
     _upload_files(task, request)
 
 
