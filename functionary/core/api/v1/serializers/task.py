@@ -90,9 +90,11 @@ class TaskCreateByNameSerializer(serializers.ModelSerializer):
                 package__name=package_name,
             )
             values["function"] = function
-        except Function.DoesNotExist as err:
+        except Function.DoesNotExist:
             exception_map = {
-                "function_name": f"No function {function_name} found for package {package_name}"
+                "function_name": (
+                    f"No function {function_name} found for package {package_name}"
+                )
             }
             exc = ValidationError(exception_map)
             raise serializers.ValidationError(serializers.as_serializer_error(exc))
