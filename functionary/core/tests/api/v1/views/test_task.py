@@ -103,6 +103,7 @@ def test_valid_content_type(
 def test_create_int_task(
     admin_client: Client,
     int_function: Function,
+    package: Package,
     request_headers: dict,
 ):
     """Create a Task with integer parameters"""
@@ -122,10 +123,26 @@ def test_create_int_task(
     assert task_id is not None
     assert Task.objects.filter(id=task_id).exists()
 
+    task_input = {
+        "function_name": int_function.name,
+        "package_name": package.name,
+        "parameters": task_input["parameters"],
+    }
+
+    response = admin_client.post(
+        url, data=task_input, content_type=MULTIPART_CONTENT, **request_headers
+    )
+    task_id = response.data.get("id")
+
+    assert response.status_code == 201
+    assert task_id is not None
+    assert Task.objects.filter(id=task_id).exists()
+
 
 def test_create_json_task(
     admin_client: Client,
-    json_function: dict,
+    json_function: Function,
+    package: Package,
     request_headers: dict,
 ):
     """Create a Task with JSON parameters"""
@@ -145,11 +162,27 @@ def test_create_json_task(
     assert task_id is not None
     assert Task.objects.filter(id=task_id).exists()
 
+    task_input = {
+        "function_name": json_function.name,
+        "package_name": package.name,
+        "parameters": task_input["parameters"],
+    }
+
+    response = admin_client.post(
+        url, data=task_input, content_type=MULTIPART_CONTENT, **request_headers
+    )
+    task_id = response.data.get("id")
+
+    assert response.status_code == 201
+    assert task_id is not None
+    assert Task.objects.filter(id=task_id).exists()
+
 
 def test_create_file_task(
     mocker,
     admin_client: Client,
     file_function: Function,
+    package: Package,
     request_headers: dict,
 ):
     """Create a Task with file parameters"""
@@ -163,14 +196,29 @@ def test_create_file_task(
     mocker.patch("core.api.v1.views.task._upload_files", mock_file_upload)
 
     example_file = BytesIO(b"Hello World!")
-    file_function_input = {"function": str(file_function.id), "prop1": example_file}
+    task_input = {"function": str(file_function.id), "prop1": example_file}
     response = admin_client.post(
         url,
-        data=file_function_input,
+        data=task_input,
         content_type=MULTIPART_CONTENT,
         **request_headers,
     )
 
+    task_id = response.data.get("id")
+
+    assert response.status_code == 201
+    assert task_id is not None
+    assert Task.objects.filter(id=task_id).exists()
+
+    task_input = {
+        "function_name": file_function.name,
+        "package_name": package.name,
+        "prop1": task_input["prop1"],
+    }
+
+    response = admin_client.post(
+        url, data=task_input, content_type=MULTIPART_CONTENT, **request_headers
+    )
     task_id = response.data.get("id")
 
     assert response.status_code == 201
@@ -182,6 +230,7 @@ def test_create_returns_400_for_invalid_parameters(
     admin_client: Client,
     int_function: Function,
     json_function: Function,
+    package: Package,
     request_headers: dict,
 ):
     """Return a 400 for invalid tasking parameters"""
@@ -216,6 +265,20 @@ def test_create_returns_400_for_invalid_parameters(
         )
         assert response.status_code == 400
         assert not Task.objects.filter(function=json_function).exists()
+
+    task_input = {
+        "function_name": "invalid_function_name",
+        "package_name": package.name,
+        "parameters": '{"some": "input"}',
+    }
+
+    response = admin_client.post(
+        url, data=task_input, content_type=MULTIPART_CONTENT, **request_headers
+    )
+    task_id = response.data.get("id")
+
+    assert response.status_code == 400
+    assert task_id is None
 
 
 def test_no_result_returns_404(admin_client: Client, task: Task, request_headers: dict):
