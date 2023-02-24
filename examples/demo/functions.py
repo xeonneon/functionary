@@ -33,8 +33,9 @@ def variables():
     return [{"name": n, "value": v} for n, v in os.environ.items()]
 
 
-def num_chars(file: str) -> int:
+def num_chars(file: str, other_param: str) -> int:
     print(f"Fetching file from this URL: {file}")
+    print(f"Here is the other parameter: {other_param}")
     request = requests.get(file)
     if request.status_code == 200:
         return len(request.text)
