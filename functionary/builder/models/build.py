@@ -2,7 +2,7 @@
 import uuid
 
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 
 from core.models import Environment, Package
 from core.models.mixins import ModelSaveHookMixin
@@ -55,6 +55,27 @@ class Build(ModelSaveHookMixin, models.Model):
 
     def __str__(self):
         return f"{self.id}"
+
+    def error(self):
+        """Saves status as `ERROR`"""
+        self._update_status(self.ERROR)
+
+    def pending(self):
+        """Saves status as `PENDING`"""
+        self._update_status(self.PENDING)
+
+    def complete(self):
+        """Saves status as `COMPLETE`"""
+        self._update_status(self.COMPLETE)
+
+    def in_progress(self):
+        """Saves status as `IN_PROGRESS`"""
+        self._update_status(self.IN_PROGRESS)
+
+    def _update_status(self, status: str) -> None:
+        with transaction.atomic():
+            self.status = status
+            self.save()
 
     def post_save(self):
         if self.status in [Build.COMPLETE, Build.ERROR]:

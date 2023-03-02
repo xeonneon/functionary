@@ -1,6 +1,9 @@
 import pytest
+from docker.errors import BuildError
 
 from builder import utils
+from builder.models import Build, BuildLog, BuildResource
+from builder.utils import DockerSocketConnectionError
 from core.models import Function, Package, Team, User
 from core.utils.parameter import PARAMETER_TYPE
 
@@ -76,6 +79,33 @@ def function4(package2):
 
 
 @pytest.fixture
+def package_definition(function1):
+    function1_def = {
+        "name": function1.name,
+        "summary": function1.summary,
+        "parameters": [],
+        "description": "description",
+        "display_name": function1.name,
+    }
+
+    return [function1_def]
+
+
+@pytest.fixture
+def build(package1, user, environment, package_definition):
+    build = Build.objects.create(
+        creator=user, environment=environment, package=package1
+    )
+    BuildResource(
+        build=build,
+        package_contents=bytes("Example Package", encoding="utf-8"),
+        package_definition=package_definition,
+        package_definition_version="1",
+    ).save()
+    return build
+
+
+@pytest.fixture
 def package1_definitions_without_function2(function1):
     function1_def = {
         "name": function1.name,
@@ -119,3 +149,66 @@ def test_delete_removed_function_parameters(function1):
 
     assert function1.parameters.count() == 1
     assert function1.parameters.filter(name="param1").exists()
+
+
+@pytest.mark.django_db
+def test_unavailable_docker_socket(mocker):
+    def mock_unavailabe_docker_socket():
+        raise DockerSocketConnectionError("")
+
+    mocker.patch("builder.utils._get_docker_client", mock_unavailabe_docker_socket)
+
+    with pytest.raises(DockerSocketConnectionError):
+        _ = utils._get_docker_client()
+
+
+@pytest.mark.django_db
+def test_prepare_image_build(mocker, build):
+    def mock_docker_socket():
+        return ""
+
+    def mock_create_build_resources(_build):
+        return [None] * 8
+
+    def mock_prepare_image_build(_dockerfile, _package_contents, _workdir):
+        return "err_msg", Build.ERROR
+
+    mocker.patch("builder.utils._get_docker_client", mock_docker_socket)
+    mocker.patch("builder.utils._create_build_resources", mock_create_build_resources)
+    mocker.patch("builder.utils._prepare_image_build", mock_prepare_image_build)
+
+    utils.build_package(build.id)
+
+    updated_build = Build.objects.get(id=build.id)
+    updated_build_log = BuildLog.objects.get(build=updated_build)
+
+    assert updated_build.status == Build.ERROR
+    assert updated_build_log.log == "err_msg"
+
+
+@pytest.mark.django_db
+def test_build_image(mocker, build):
+    def mock_docker_socket():
+        return ""
+
+    def mock_create_build_resources(_build):
+        return [None] * 8
+
+    def mock_prepare_image_build(_dockerfile, _package_contents, _workdir):
+        return "", Build.IN_PROGRESS
+
+    def mock_build_image(_docker_client, _image_name, _workdir):
+        raise BuildError(reason="Failed build", build_log=[{"status": "Failed build"}])
+
+    mocker.patch("builder.utils._get_docker_client", mock_docker_socket)
+    mocker.patch("builder.utils._create_build_resources", mock_create_build_resources)
+    mocker.patch("builder.utils._prepare_image_build", mock_prepare_image_build)
+    mocker.patch("builder.utils._docker_build_image", mock_build_image)
+
+    utils.build_package(build.id)
+
+    updated_build = Build.objects.get(id=build.id)
+    updated_build_log = BuildLog.objects.get(build=updated_build)
+
+    assert updated_build.status == Build.ERROR
+    assert updated_build_log.log == "Failed build"
