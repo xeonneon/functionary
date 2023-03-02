@@ -20,6 +20,10 @@ class S3ConnectionError(Exception):
     pass
 
 
+class S3FileUploadError(Exception):
+    pass
+
+
 class MinioInterface:
     """Wrapper class around MinIO API operations
 
@@ -60,12 +64,30 @@ class MinioInterface:
         return self.client.bucket_exists(self.bucket_name)
 
     def put_file(self, file: BytesIO, length: int, filename: str) -> None:
-        _ = self.client.put_object(
-            bucket_name=self.bucket_name,
-            object_name=filename,
-            data=file,
-            length=length,
-        )
+        """Uploads file to bucket
+
+        Args:
+            file: The bytes to upload
+            length: The length of the file
+            filename: The name of the file
+
+        Returns:
+            None
+
+        Raises:
+            S3FileUploadError: Raised when file fails to get uploaded
+        """
+        try:
+            _ = self.client.put_object(
+                bucket_name=self.bucket_name,
+                object_name=filename,
+                data=file,
+                length=length,
+            )
+        except Exception:
+            err_msg = f"Failed to upload file: {filename}"
+            logger.error(err_msg)
+            raise S3FileUploadError(err_msg)
 
     def get_filenames(self) -> list[str]:
         objects = self.client.list_objects(self.bucket_name)
@@ -135,6 +157,7 @@ def handle_file_parameters(
     Raises:
         S3ConnectionError: Raised when client is unable to connect or communicate
             with the configured S3 provider.
+        S3FileUploadError: Raised when file fails to get uploaded
     """
     if request.FILES:
         minio = MinioInterface(bucket_name=str(task.environment.id))
