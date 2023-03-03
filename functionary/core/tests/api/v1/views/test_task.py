@@ -257,7 +257,7 @@ def test_fail_file_upload(
 
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     assert task_id is None
-    assert not Task.objects.filter(id=task_id).exists()
+    assert not Task.objects.filter(function=file_function).exists()
 
 
 def test_create_returns_400_for_invalid_parameters(
