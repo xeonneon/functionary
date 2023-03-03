@@ -15,7 +15,6 @@ class PackageFilter(django_filters.FilterSet):
 class PackageTable(tables.Table):
     name = tables.Column(
         linkify=lambda record: reverse("ui:package-detail", kwargs={"pk": record.id}),
-        attrs={"a": {"class": "text-decoration-none"}},
         verbose_name="Package",
     )
 

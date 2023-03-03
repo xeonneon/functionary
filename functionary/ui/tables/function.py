@@ -18,14 +18,12 @@ class FunctionFilter(django_filters.FilterSet):
 class FunctionTable(tables.Table):
     name = tables.Column(
         linkify=lambda record: reverse("ui:function-detail", kwargs={"pk": record.id}),
-        attrs={"a": {"class": "text-decoration-none"}},
         verbose_name="Function",
     )
     package = tables.Column(
         linkify=lambda record: reverse(
             "ui:package-detail", kwargs={"pk": record.package.id}
         ),
-        attrs={"a": {"class": "text-decoration-none"}},
     )
 
     class Meta(BaseMeta):

@@ -37,7 +37,6 @@ class BuildFilter(django_filters.FilterSet):
 class BuildTable(tables.Table):
     package = tables.Column(
         linkify=lambda record: reverse("ui:build-detail", kwargs={"pk": record.id}),
-        attrs={"a": {"class": "text-decoration-none"}},
         verbose_name="Package",
     )
     created_at = tables.DateTimeColumn(

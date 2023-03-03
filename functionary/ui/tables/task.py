@@ -37,7 +37,6 @@ class TaskListFilter(django_filters.FilterSet):
 class TaskListTable(tables.Table):
     function = tables.Column(
         linkify=lambda record: reverse("ui:task-detail", kwargs={"pk": record.id}),
-        attrs={"a": {"class": "text-decoration-none"}},
     )
 
     created_at = tables.DateTimeColumn(
