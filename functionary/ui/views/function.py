@@ -13,11 +13,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from core.auth import Permission
 from core.models import Environment, Function, Task
-from core.utils.minio import (
-    S3ConnectionError,
-    S3FileUploadError,
-    handle_file_parameters,
-)
+from core.utils.minio import S3Error, handle_file_parameters
 from ui.forms.tasks import TaskParameterForm, TaskParameterTemplateForm
 from ui.tables.function import FunctionTable
 
@@ -105,7 +101,7 @@ def execute(request: HttpRequest) -> HttpResponse:
                     code="invalid",
                 ),
             )
-        except S3ConnectionError:
+        except S3Error:
             status_code = 503
             form.add_error(
                 None,
@@ -114,9 +110,6 @@ def execute(request: HttpRequest) -> HttpResponse:
                     "If the problem persists, contact your system administrator."
                 ),
             )
-        except S3FileUploadError:
-            status_code = 503
-            form.add_error(None, "Failed to upload given file(s).")
 
     args = {"form": form, "function": func}
     return render(request, "core/function_detail.html", args, status=status_code)

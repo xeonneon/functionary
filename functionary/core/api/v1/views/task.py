@@ -27,7 +27,7 @@ from core.api.v1.serializers import (
 from core.api.v1.utils import PREFIX, SEPARATOR, get_parameter_name
 from core.api.viewsets import EnvironmentGenericViewSet
 from core.models import Task, TaskResult
-from core.utils.minio import S3FileUploadError, handle_file_parameters
+from core.utils.minio import S3Error, handle_file_parameters
 
 RENDER_PREFIX = f"{PREFIX}{SEPARATOR}".replace("\\", "")
 
@@ -106,7 +106,7 @@ class TaskViewSet(
             task.save()
         except (ValidationError, DjangoValidationError) as err:
             raise serializers.ValidationError(serializers.as_serializer_error(err))
-        except S3FileUploadError as err:
+        except S3Error as err:
             return Response(
                 {"error": f"{err}"},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
