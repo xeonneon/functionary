@@ -3,7 +3,7 @@ from docker.errors import BuildError
 
 from builder import utils
 from builder.models import Build, BuildLog, BuildResource
-from builder.utils import DockerSocketConnectionError
+from builder.utils import DockerSocketConnectionError, PackageManager
 from core.models import Function, Package, Team, User
 from core.utils.parameter import PARAMETER_TYPE
 
@@ -127,8 +127,9 @@ def test_deactivate_removed_functions(
     for function in db_functions:
         assert function.active is True
 
-    utils._deactivate_removed_functions(
-        package1_definitions_without_function2, package1
+    package_manager = PackageManager(package1)
+    package_manager._deactivate_removed_functions(
+        package1_definitions_without_function2
     )
 
     # package2 functions should still all be active
@@ -145,7 +146,8 @@ def test_delete_removed_function_parameters(function1):
 
     parameters_to_keep = function1.parameters.get(name="param1")
 
-    utils._delete_removed_function_parameters([parameters_to_keep], function1.package)
+    package_manager = PackageManager(function1.package)
+    package_manager._delete_removed_function_parameters([parameters_to_keep])
 
     assert function1.parameters.count() == 1
     assert function1.parameters.filter(name="param1").exists()
@@ -167,14 +169,10 @@ def test_prepare_image_build(mocker, build):
     def mock_docker_socket():
         return ""
 
-    def mock_create_build_resources(_build):
-        return [None] * 8
-
     def mock_prepare_image_build(_dockerfile, _package_contents, _workdir):
         return "err_msg", Build.ERROR
 
     mocker.patch("builder.utils._get_docker_client", mock_docker_socket)
-    mocker.patch("builder.utils._create_build_resources", mock_create_build_resources)
     mocker.patch("builder.utils._prepare_image_build", mock_prepare_image_build)
 
     utils.build_package(build.id)

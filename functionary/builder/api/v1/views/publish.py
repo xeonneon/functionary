@@ -1,6 +1,7 @@
 from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import ParseError
 from rest_framework.parsers import MultiPartParser
+from rest_framework.request import HttpRequest
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -38,7 +39,7 @@ class PublishView(APIView, EnvironmentViewMixin):
         responses={200: BuildSerializer},
         parameters=HEADER_PARAMETERS,
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request: HttpRequest, *args, **kwargs):
         """Receives the package contents and package definition files. The definition
         file is validated and then a new Build is created
         """
@@ -75,7 +76,7 @@ class PublishView(APIView, EnvironmentViewMixin):
 
         return Response(BuildSerializer(build).data)
 
-    def _validate_publish_input(self, request):
+    def _validate_publish_input(self, request: HttpRequest):
         """Validates that the request includes all required data"""
         if request.FILES.get("package_contents") is None:
             raise ParseError(detail="package_contents is required and must be a file")

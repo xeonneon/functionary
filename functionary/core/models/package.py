@@ -3,6 +3,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.db.models import QuerySet
 
 from core.models import Environment
 
@@ -46,15 +47,22 @@ class Package(models.Model):
     def __str__(self):
         return self.name
 
+    def update_image_name(self, image_name: str) -> None:
+        """Update the package's image name with the given image name"""
+        self.image_name = image_name
+        self.save()
+
     @property
     def render_name(self) -> str:
         """Returns the template-renderable name of the package"""
         return self.display_name if self.display_name else self.name
 
     @property
-    def full_image_name(self):
+    def full_image_name(self) -> str:
+        """Returns the package's image name prepended with the registry info"""
         return f"{settings.REGISTRY}/{self.image_name}"
 
     @property
-    def active_functions(self):
+    def active_functions(self) -> QuerySet:
+        """Returns a QuerySet of all active functions in the package"""
         return self.functions.filter(active=True)
