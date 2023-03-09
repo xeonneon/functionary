@@ -39,7 +39,7 @@ class DockerSocketConnectionError(Exception):
     pass
 
 
-class BuilderException(Exception):
+class BuilderError(Exception):
     pass
 
 
@@ -289,31 +289,25 @@ def build_package(build_id: "UUID") -> None:
     """
     build = Build.objects.select_related("environment").get(id=build_id)
     build_resource = BuildResource.objects.get(build=build)
+    log_msgs: list[str] = []
 
     logger.info(f"Starting build {build.id}")
 
     try:
-        build, log = _build_package(build, build_resource)
-        build.status = Build.COMPLETE
-        _create_build_log(build, log)
-        _update_build_status(build)
-        logger.info(f"Build {build_id} COMPLETE")
-    except BuilderException as err:
-        logger.error(f"Encountered build error: {err}")
-        build.status = Build.ERROR
-        _create_build_log(build, err)
-        _update_build_status(build)
-    except DockerSocketConnectionError as err:
-        logger.fatal(f"{err}")
-        raise err
+        _build_package(build, build_resource, log_msgs)
+        build.complete()
+        if not build.package.completed:
+            build.package.complete()
     except Exception as err:
-        logger.error(f"Build {build.id} encountered unexpected error: {err}")
-        build.status = Build.ERROR
-        _create_build_log(build, err)
-        _update_build_status(build)
+        logger.error(f"Build {build.id} encountered error: {err}")
+        log_msgs.append(str(err))
+        build.error()
+    finally:
+        log = "\n".join(log_msgs)
+        _create_build_log(build, log)
 
 
-def _build_package(build: Build, build_resource: BuildResource) -> tuple[Build, str]:
+def _build_package(build: Build, build_resource: BuildResource, log: list[str]) -> None:
     """Generate and build necessary resources to complete image build
 
     Args:
@@ -325,15 +319,13 @@ def _build_package(build: Build, build_resource: BuildResource) -> tuple[Build, 
 
     Raises:
         DockerSockerConnectionError: Raised when connection to the docker socket
-        could not be established.
+            could not be established.
+        BuilderError: Raised during various build process errors
     """
     docker_client = _get_docker_client()
-
-    build.status = Build.IN_PROGRESS
-    _update_build_status(build)
+    build.in_progress()
 
     # Set variables necessary for build process
-    build_log = ""
     workdir = _generate_path_for_build(build)
     package: Package = build.package
     image_name, dockerfile = build_resource.image_details
@@ -343,19 +335,20 @@ def _build_package(build: Build, build_resource: BuildResource) -> tuple[Build, 
     function_definitions: list[dict] = package_definition.get("functions")
 
     _prepare_image_build(dockerfile, package_contents, workdir)
+    log.append("Unpacked package contents and loaded appropriate Dockerfile template.")
 
     image, build_results = _build_image(docker_client, full_image_name, workdir)
-    build_log = _update_log(build_log, build_results)
+    log.append(str(build_results))
 
     push_results = _push_image(docker_client, full_image_name)
-    build_log = _update_log(build_log, push_results)
+    log.append(str(push_results))
 
     package.update_image_name(image_name)
     package_manager = PackageManager(package)
     package_manager.update_functions(function_definitions)
     _cleanup(docker_client, image, workdir, build)
 
-    return build, build_log
+    logger.info(f"Build {build.id} COMPLETE")
 
 
 def _format_build_results(build_results):
@@ -418,7 +411,7 @@ def _extract_package_contents(package_contents: bytes, workdir: str) -> None:
         None
 
     Raises:
-        BuilderException: Raised when reading the tarfile resulted in an exception
+        BuilderError: Raised when reading the tarfile resulted in an exception
     """
     package_contents_io = io.BytesIO(package_contents)
 
@@ -428,11 +421,11 @@ def _extract_package_contents(package_contents: bytes, workdir: str) -> None:
     except tarfile.ReadError as err:
         err_msg = f"Failed to read tarfile: {err}"
         logger.error(err_msg)
-        raise BuilderException(err_msg)
+        raise BuilderError(err_msg)
     except Exception as err:
         err_msg = f"Failed extracting package contents: {err}"
         logger.error(err_msg)
-        raise BuilderException(err_msg)
+        raise BuilderError(err_msg)
     finally:
         tarball.close()
         package_contents_io.close()
@@ -449,14 +442,14 @@ def _load_dockerfile_template(dockerfile_template: str, workdir: str) -> None:
         None
 
     Raises:
-        BuilderException: Raised when template dockerfile template does not exist
+        BuilderError: Raised when template dockerfile template does not exist
     """
     try:
         template = get_template(dockerfile_template)
     except TemplateDoesNotExist:
         err_msg = "Template does not exist."
         logger.error(err_msg)
-        raise BuilderException(err_msg)
+        raise BuilderError(err_msg)
 
     context = {"registry": settings.REGISTRY}
 
@@ -478,7 +471,7 @@ def _prepare_image_build(
         None
 
     Raises:
-        BuilderException: Raised when package content extraction or dockerfile
+        BuilderError: Raised when package content extraction or dockerfile
             template loading fails
     """
     _extract_package_contents(package_contents, workdir)
@@ -502,7 +495,7 @@ def _build_image(
         formatted_build_results: The formatted log of the build steps
 
     Raises:
-        BuilderException: Raised when image build fails
+        BuilderError: Raised when image build fails
     """
     try:
         image, build_result = _docker_build_image(
@@ -516,7 +509,7 @@ def _build_image(
             if hasattr(exc, "build_log")
             else str(exc)
         )
-        raise BuilderException(f"Error building image: {formatted_build_results}")
+        raise BuilderError(f"Error building image: {formatted_build_results}")
 
 
 def _docker_build_image(
@@ -540,7 +533,7 @@ def _push_image(docker_client: "DockerClient", full_image_name: str) -> str:
         push_results: The formatted string of the push results. None if failed push
 
     Raises:
-        BuilderException: Raised when error pushing image
+        BuilderError: Raised when error pushing image
     """
     try:
         push_result = docker_client.images.push(full_image_name, stream=True)
@@ -548,25 +541,10 @@ def _push_image(docker_client: "DockerClient", full_image_name: str) -> str:
     except APIError as exc:
         err_msg = f"Failed to push image: {full_image_name}. Error: {exc}"
         logger.error(err_msg)
-        raise BuilderException(err_msg)
+        raise BuilderError(err_msg)
 
 
-def _update_build_status(build: Build) -> None:
-    """Update the status of the build in the database"""
-    match build.status:
-        case Build.COMPLETE:
-            build.complete()
-        case Build.ERROR:
-            build.error()
-        case Build.IN_PROGRESS:
-            build.in_progress()
-        case Build.PENDING:
-            build.pending()
-        case _:
-            logger.error(f"Unknown build status for {build}: {build.status}")
-
-
-def _create_build_log(build: Build, log: "Union[str, BuilderException]") -> None:
+def _create_build_log(build: Build, log: "Union[str, BuilderError]") -> None:
     """Wrapper method to create BuildLog for given build"""
     BuildLog.objects.create(build=build, log=str(log))
 
@@ -585,7 +563,7 @@ def _cleanup(
     except Exception as err:
         err_msg = f"Unable to delete build directory. Error: {err}"
         logger.error(err_msg)
-        raise BuilderException(err_msg)
+        raise BuilderError(err_msg)
 
 
 def _get_docker_client() -> "DockerClient":
@@ -617,20 +595,4 @@ def _generate_path_for_build(build: Build) -> str:
         return workdir
     except OSError as err:
         logger.error(f"Error creating directory for build {build.id}. Error: {err}")
-        raise BuilderException(f"Failed to generate directory: {err.filename}")
-
-
-def _update_log(log: str, log_msg: str) -> str:
-    """Return the new log with the log join'd with the log message
-
-    Args:
-        log: The original log string
-        log_msg: The string to concatenate to the log
-
-    Returns:
-        log: The new log message
-    """
-    if log == "":
-        return log_msg
-
-    return "\n".join([log, log_msg])
+        raise BuilderError(f"Failed to generate directory: {err.filename}")

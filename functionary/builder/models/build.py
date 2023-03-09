@@ -2,7 +2,7 @@
 import uuid
 
 from django.conf import settings
-from django.db import models, transaction
+from django.db import models
 
 from core.models import Environment, Package
 from core.models.mixins import ModelSaveHookMixin
@@ -73,9 +73,8 @@ class Build(ModelSaveHookMixin, models.Model):
         self._update_status(self.IN_PROGRESS)
 
     def _update_status(self, status: str) -> None:
-        with transaction.atomic():
-            self.status = status
-            self.save()
+        self.status = status
+        self.save()
 
     def post_save(self):
         if self.status in [Build.COMPLETE, Build.ERROR]:

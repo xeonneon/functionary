@@ -19,6 +19,8 @@ class Package(models.Model):
         summary: summary of the package
         description: more details about the package
         language: the language the functions in the package are written in
+        completed: Set to True if the package has been successfully built once
+        enabled: Determines if the package and its functions can be used
         image_name: the docker image name for the package
     """
 
@@ -31,6 +33,12 @@ class Package(models.Model):
     display_name = models.CharField(max_length=64, null=True)
     summary = models.CharField(max_length=128, null=True)
     description = models.TextField(null=True)
+
+    # Completed signals that the package has been successfully built at least once
+    completed = models.BooleanField(null=False, default=False)
+
+    # Enabled determines if the package and its functions should be disabled
+    enabled = models.BooleanField(null=False, default=True)
 
     # TODO: Restrict to list of choices?
     language = models.CharField(max_length=64)
@@ -50,6 +58,19 @@ class Package(models.Model):
     def update_image_name(self, image_name: str) -> None:
         """Update the package's image name with the given image name"""
         self.image_name = image_name
+        self.save()
+
+    def complete(self) -> None:
+        """Mark package as completed and save package completion status"""
+        self.completed = True
+        self.save()
+
+    def enable(self) -> None:
+        self.enabled = True
+        self.save()
+
+    def disable(self) -> None:
+        self.enabled = False
         self.save()
 
     @property
