@@ -76,7 +76,7 @@ class Build(ModelSaveHookMixin, models.Model):
         """Update status of the build"""
         if status != self.status:
             self.status = status
-            self.save(update_fields=["status"])
+            self.save()
 
     def post_save(self):
         if self.status in [Build.COMPLETE, Build.ERROR]:

@@ -90,7 +90,7 @@ class Package(models.Model):
         """Update status of the package"""
         if status != self.status:
             self.status = status
-            self.save(update_fields=["status"])
+            self.save()
 
     @property
     def render_name(self) -> str:
