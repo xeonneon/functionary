@@ -19,10 +19,25 @@ class Package(models.Model):
         summary: summary of the package
         description: more details about the package
         language: the language the functions in the package are written in
-        completed: Set to True if the package has been successfully built once
-        enabled: Determines if the package and its functions can be used
+        status: represents the status of the package
         image_name: the docker image name for the package
     """
+
+    # Pending status represents the package is being built
+    # Complete status represents the package has been successfully built at least once
+    # Enabled status represents that the package is can be used by users
+    # Disabled status represents that the package cannot be used by users
+    PENDING = "PENDING"
+    COMPLETE = "COMPLETE"
+    ENABLED = "ENABLED"
+    DISABLED = "DISABLED"
+
+    STATUS_CHOICES = [
+        (PENDING, "Pending"),
+        (COMPLETE, "Complete"),
+        (ENABLED, "Enabled"),
+        (DISABLED, "Disabled"),
+    ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     environment = models.ForeignKey(to=Environment, on_delete=models.CASCADE)
@@ -33,12 +48,7 @@ class Package(models.Model):
     display_name = models.CharField(max_length=64, null=True)
     summary = models.CharField(max_length=128, null=True)
     description = models.TextField(null=True)
-
-    # Completed signals that the package has been successfully built at least once
-    completed = models.BooleanField(null=False, default=False)
-
-    # Enabled determines if the package and its functions should be disabled
-    enabled = models.BooleanField(null=False, default=True)
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=PENDING)
 
     # TODO: Restrict to list of choices?
     language = models.CharField(max_length=64)
@@ -61,17 +71,26 @@ class Package(models.Model):
         self.save()
 
     def complete(self) -> None:
-        """Mark package as completed and save package completion status"""
-        self.completed = True
-        self.save()
+        """Mark package as completed if it was previously in `PENDING` status"""
+        # NOTE: This is to prevent overwriting the enabled/disabled status set by users
+        if self.status == self.PENDING:
+            self._update_status(self.COMPLETE)
 
     def enable(self) -> None:
-        self.enabled = True
-        self.save()
+        """Enable package as it's associated functions"""
+        # TODO: Add method for enabling package's functions
+        self._update_status(self.ENABLED)
 
     def disable(self) -> None:
-        self.enabled = False
-        self.save()
+        """Disable package and it's associated functions"""
+        # TODO: Add method for disabling package's functions
+        self._update_status(self.DISABLED)
+
+    def _update_status(self, status: str) -> None:
+        """Update status of the package"""
+        if status != self.status:
+            self.status = status
+            self.save(update_fields=["status"])
 
     @property
     def render_name(self) -> str:

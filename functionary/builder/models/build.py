@@ -15,8 +15,7 @@ class Build(ModelSaveHookMixin, models.Model):
         created_at: time that the build was created
         updated_at: time of the most recent status update
         status: current status of the build
-        package: reference to the Package created by a successful build. Will not be
-                 set for builds that have failed or are in progress.
+        package: reference to the Package created by a build
     """
 
     PENDING = "PENDING"
@@ -40,7 +39,7 @@ class Build(ModelSaveHookMixin, models.Model):
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=PENDING)
     environment = models.ForeignKey(to=Environment, on_delete=models.CASCADE)
     package = models.ForeignKey(
-        to=Package, on_delete=models.CASCADE, blank=True, null=True
+        to=Package, on_delete=models.CASCADE, blank=False, null=False
     )
 
     class Meta:
@@ -67,14 +66,17 @@ class Build(ModelSaveHookMixin, models.Model):
     def complete(self):
         """Saves status as `COMPLETE`"""
         self._update_status(self.COMPLETE)
+        self.package.complete()
 
     def in_progress(self):
         """Saves status as `IN_PROGRESS`"""
         self._update_status(self.IN_PROGRESS)
 
     def _update_status(self, status: str) -> None:
-        self.status = status
-        self.save()
+        """Update status of the build"""
+        if status != self.status:
+            self.status = status
+            self.save(update_fields=["status"])
 
     def post_save(self):
         if self.status in [Build.COMPLETE, Build.ERROR]:

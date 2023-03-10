@@ -296,8 +296,6 @@ def build_package(build_id: "UUID") -> None:
     try:
         _build_package(build, build_resource, log_msgs)
         build.complete()
-        if not build.package.completed:
-            build.package.complete()
     except Exception as err:
         logger.error(f"Build {build.id} encountered error: {err}")
         log_msgs.append(str(err))
@@ -327,7 +325,7 @@ def _build_package(build: Build, build_resource: BuildResource, log: list[str]) 
 
     # Set variables necessary for build process
     workdir = _generate_path_for_build(build)
-    package: Package = build.package
+    package = build.package
     image_name, dockerfile = build_resource.image_details
     full_image_name = f"{settings.REGISTRY}/{image_name}"
     package_contents = build_resource.package_contents
@@ -544,9 +542,9 @@ def _push_image(docker_client: "DockerClient", full_image_name: str) -> str:
         raise BuilderError(err_msg)
 
 
-def _create_build_log(build: Build, log: "Union[str, BuilderError]") -> None:
+def _create_build_log(build: Build, log: str) -> None:
     """Wrapper method to create BuildLog for given build"""
-    BuildLog.objects.create(build=build, log=str(log))
+    BuildLog.objects.create(build=build, log=log)
 
 
 def _cleanup(
