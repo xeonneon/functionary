@@ -3,17 +3,18 @@ import json
 import logging
 import os
 import shutil
-import tarfile
+from tarfile import ReadError, TarFile
+from tarfile import open as open_tarfile
 from typing import List
 from uuid import UUID
 
 import docker
-import yaml
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.db import transaction
 from django.template.loader import get_template
 from docker.errors import APIError, BuildError, DockerException
+from yaml import YAMLError, safe_load
 
 from core.models import Environment, Function, FunctionParameter, Package, User
 
@@ -33,34 +34,59 @@ def extract_package_definition(package_contents: bytes) -> dict:
 
     Returns:
         The package definition yaml loaded as a dict
+
+    Raises:
+        InvalidPackage: Raised whenever an error is encountered while extracting
+            package contents from the package.yaml in the tarball
     """
     package_contents_io = io.BytesIO(package_contents)
+    tarfile = None
 
     try:
-        tarball = tarfile.open(fileobj=package_contents_io, mode="r")
-    except tarfile.ReadError:
+        tarfile = _get_tarfile(package_contents_io)
+        package_definition = _extract_package_definition(tarfile)
+        return package_definition
+    except ReadError:
         raise InvalidPackage(
             "Could not untar package file. Make sure it is a valid gzipped tarball."
         )
-
-    def close_files():
-        package_contents_io.close()
-        tarball.close()
-
-    try:
-        package_definition_io = tarball.extractfile("package.yaml")
     except KeyError:
-        close_files()
         raise InvalidPackage("package.yaml not found")
+    except (InvalidPackage, YAMLError):
+        raise InvalidPackage("package.yaml is invalid YAML")
+    except Exception as err:
+        logger.error(f"Failed extracting package definition: {err}")
+        raise InvalidPackage("failed to extract package definition")
+    finally:
+        if tarfile:
+            tarfile.close()
+        package_contents_io.close()
 
-    if package_definition_io is None:
-        close_files()
-        raise InvalidPackage("package.yaml found, but is not a regular file")
 
-    package_definition = yaml.safe_load(package_definition_io.read())
-    close_files()
+def _get_tarfile(package_contents: io.BytesIO) -> TarFile:
+    """Extract tarfile from given bytes"""
+    return open_tarfile(fileobj=package_contents, mode="r")
 
-    return package_definition
+
+def _extract_package_definition(tarfile: TarFile) -> dict:
+    """Extract the package definition from given tarfile
+
+    Args:
+        tarfile: The opened tarfile in read mode
+
+    Returns:
+        package_contents: A dictionary representation of the package yaml
+
+    Raises:
+        InvalidPackage: Raised when the package.yaml is not a regular file
+        KeyError: Raised when package.yaml is not found in the tarfile
+        YAMLError: Raised when the YAML parser encounters an error condition
+    """
+    package_yaml = tarfile.extractfile("package.yaml")
+    if not package_yaml:
+        raise InvalidPackage("package.yaml found, but it is not a regular file.")
+
+    return safe_load(package_yaml.read())
 
 
 def initiate_build(
@@ -251,7 +277,7 @@ def build_package(build_id: UUID):
 def _extract_package_contents(package_contents: bytes, workdir: str) -> None:
     """Extract the package tarball"""
     package_contents_io = io.BytesIO(package_contents)
-    tarball = tarfile.open(fileobj=package_contents_io, mode="r")
+    tarball = open_tarfile(fileobj=package_contents_io, mode="r")
     tarball.extractall(workdir)
     tarball.close()
     package_contents_io.close()
