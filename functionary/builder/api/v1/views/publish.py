@@ -53,8 +53,10 @@ class PublishView(APIView, EnvironmentViewMixin):
         # TO-DO: put invalid package yaml class here
         try:
             package_yaml = extract_package_definition(package_contents_blob)
-        except InvalidPackage:
-            raise InvalidPackage("Could not extract package.yaml from package tarball")
+        except InvalidPackage as err:
+            raise InvalidPackage(
+                f"Failed extracting package.yaml from package tarball: {err}"
+            )
 
         # If the package definition schema changes at any point, this would need to
         # identify the correct serializer based on the package_definition_version

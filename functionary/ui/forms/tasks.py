@@ -37,7 +37,7 @@ class HTMLDateTimeInput(DateTimeInput):
 _field_mapping = {
     PARAMETER_TYPE.INTEGER: (IntegerField, None),
     PARAMETER_TYPE.STRING: (CharField, None),
-    PARAMETER_TYPE.TEXT: (CharField, Textarea),
+    PARAMETER_TYPE.TEXT: (CharField, Textarea(attrs={"rows": "3", "cols": "40"})),
     PARAMETER_TYPE.FLOAT: (FloatField, None),
     PARAMETER_TYPE.FILE: (CharField, FileInput),
     PARAMETER_TYPE.BOOLEAN: (BooleanField, None),
@@ -46,7 +46,7 @@ _field_mapping = {
         DateTimeField,
         HTMLDateTimeInput,
     ),
-    PARAMETER_TYPE.JSON: (JSONField, Textarea),
+    PARAMETER_TYPE.JSON: (JSONField, Textarea(attrs={"rows": "3", "cols": "40"})),
 }
 
 
@@ -132,9 +132,22 @@ class TaskParameterForm(Form):
 
             field = field_class(**kwargs)
 
-            # Style all inputfields except the checkbox with the "input" class
+            # Style input fields
+            # TODO: select should be form-select-input
             if param_type != PARAMETER_TYPE.BOOLEAN:
-                field.widget.attrs.update({"class": "input"})
+                field.widget.attrs.update(
+                    {
+                        "class": "form-control",
+                        "aria-describedby": f"{param_name}HelpBlock",
+                    }
+                )
+            else:
+                field.widget.attrs.update(
+                    {
+                        "class": "form-check-input",
+                        "aria-describedby": f"{param_name}HelpBlock",
+                    }
+                )
 
             self.fields[param_name] = field
 

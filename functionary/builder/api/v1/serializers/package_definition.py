@@ -54,9 +54,11 @@ class PackageDefinitionSerializer(serializers.Serializer):
     summary = serializers.CharField(max_length=128, required=False)
     description = serializers.CharField(required=False)
     language = serializers.ChoiceField(choices=LANGUAGES, required=False)
-    filename = serializers.CharField(required=False)
-    environment = serializers.DictField(child=serializers.CharField(), required=False)
-    functions = FunctionSerializer(many=True)
+    filename = serializers.CharField(required=False, read_only=True)
+    environment = serializers.DictField(
+        child=serializers.CharField(), required=False, read_only=True
+    )
+    functions = FunctionSerializer(many=True, allow_empty=False)
 
 
 class PackageDefinitionWithVersionSerializer(serializers.Serializer):

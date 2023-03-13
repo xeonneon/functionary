@@ -1,4 +1,5 @@
 import pytest
+from yaml import YAMLError
 
 from builder import utils
 from builder.models import Build, BuildLog, BuildResource
@@ -15,6 +16,11 @@ def user():
 @pytest.fixture
 def team():
     return Team.objects.create(name="team")
+
+
+@pytest.fixture
+def package_contents():
+    return bytes("example package contents", encoding="utf-8")
 
 
 @pytest.fixture
@@ -204,3 +210,37 @@ def test_build_image(mocker, build):
 
     assert updated_build.status == Build.ERROR
     assert updated_build_log.log.split("\n")[-1] == "Failed"
+
+
+def test_invalid_package_yaml(mocker, package_contents):
+    class TarFile:
+        def close():
+            return
+
+    def mock_tarfile(_bytes):
+        return TarFile
+
+    def mock_missing_package_yaml(_package_yaml):
+        raise KeyError("missing package yaml")
+
+    def mock_invalid_package_yaml(_package_yaml):
+        raise YAMLError
+
+    def mock_invalid_package(_package_yaml):
+        raise utils.InvalidPackage
+
+    mocker.patch("builder.utils._get_tarfile", mock_tarfile)
+    mocker.patch("builder.utils._extract_package_definition", mock_missing_package_yaml)
+
+    with pytest.raises(utils.InvalidPackage):
+        utils.extract_package_definition(package_contents)
+
+    mocker.patch("builder.utils._extract_package_definition", mock_invalid_package_yaml)
+
+    with pytest.raises(utils.InvalidPackage):
+        utils.extract_package_definition(package_contents)
+
+    mocker.patch("builder.utils._extract_package_definition", mock_invalid_package)
+
+    with pytest.raises(utils.InvalidPackage):
+        utils.extract_package_definition(package_contents)

@@ -6,8 +6,6 @@
         <meta name="description" content="Functionary User Interface"/>
         <meta name="keywords" content="Functionary"/>
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
-        <link rel="stylesheet"
-              href="{% static 'webfonts/Functionary_Playball.woff2' %}"/>
         <link rel="shortcut icon"
               type="image/png"
               href="{% static 'favicon/favicon.ico' %}"/>
@@ -109,7 +107,7 @@
                         {% endif %}
                     </div>
                 </div>
-                <div class="col-11 col-md-9 py-3">
+                <div class="col-11 col-md-9 col-xl-8 col-xxl-7 mx-1 mx-md-3 mx-lg-4 py-3">
                     {% if messages %}
                         {% include "partials/auth_messages.html" %}
                     {% endif %}
