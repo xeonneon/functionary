@@ -1,6 +1,8 @@
 # (required): schema version for the package portion of the yaml. This would inform which serializer / parser
 # to use in the event that we needed to make breaking changes to the way packages are defined.
 version: 1.0
+
+# (required): The package metadata
 package:
   # (required) human-friendly unique identifier (team + package name must be unique)
   name: calculator
@@ -16,21 +18,21 @@ package:
   # (required) Language that the functions are written in
   language: python
 
-  # (required)
-  functions:
-    # Similar to package level fields, but for the function
-    - name: add
-      summary: Add two integers
-      description: This function consumes two integers and outputs the sum.
-      return_type: integer
+# (required): The list of functions and their associated metadata
+functions:
+  # Similar to package level fields, but for the function
+  - name: add
+    summary: Add two integers
+    description: This function consumes two integers and outputs the sum.
+    return_type: integer
 
-      # (required) Parameters that the function takes
-      parameters:
-        - name: a
-          type: integer
-          default: 1
-          required: true
-        - name: b
-          type: integer
-          default: 1
-          required: true
+    # (required) Parameters that the function takes
+    parameters:
+      - name: a
+        type: integer
+        default: 1
+        required: true
+      - name: b
+        type: integer
+        default: 1
+        required: true

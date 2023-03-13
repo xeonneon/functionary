@@ -67,6 +67,7 @@ class PublishView(APIView, EnvironmentViewMixin):
                 f"Invalid package.yaml. Encountered error: {serializer.errors}"
             )
         package_definition = serializer.validated_data["package"]
+        package_definition["functions"] = serializer.validated_data["functions"]
 
         build = initiate_build(
             creator=request.user,

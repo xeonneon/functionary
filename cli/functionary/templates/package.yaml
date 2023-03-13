@@ -1,5 +1,7 @@
 # (required): schema version for the package definition
 version: 1.0
+
+# (required): The package metadata
 package:
   # (required) human-friendly unique identifier; cannot be changed
   name: "__PACKAGE_NAME__"
@@ -16,33 +18,34 @@ package:
   # (required) language that the functions are written in
   language: "__PACKAGE_LANGUAGE__"
 
-  functions:
-#    # similar to package level fields, but for the function
-#    - name: string
-#      summary: string
-#      display_name: string
-#      description: string
-#      # (optional) list of environment variables to set at runtime
-#      variables: list
-#      # (optional) data type of the functions return value
-#      return_type: string
+# (required): The list of functions and their associated metadata. 
+# Must define at least one function
+functions: []
+#   # similar to package level fields, but for the function
+#   - name: string
+#     summary: string
+#     display_name: string
+#     description: string
+#     # (optional) list of environment variables to set at runtime
+#     variables: []
+#     # (optional) data type of the functions return value
+#     return_type: string
 
-#      # (required) Parameters that the function takes
-#      parameters:
-#          # (required) should match the name of the parameter in the actual function signature
-#        - name: string
-#          # (optional) defaults to name; determines how the parameter is displayed in the UI
-#          display_name: string
-#          # (optional) detailed description
-#          description: string
-#          # (required) data type of the parameter
-#          type:  string
-#          # (optional) default value that will be used if none is provided
-#          default: string | num
-#          # (optional) whether the parameter is required
-#          required: bool
-
-#          # (optional) enumerate valid input options
-#          options:
-#            - name: string
-#              value: string | num
+#     # (required) Parameters that the function takes
+#     parameters:
+#         # (required) should match the name of the parameter in the actual function signature
+#       - name: string
+#         # (optional) defaults to name; determines how the parameter is displayed in the UI
+#         display_name: string
+#         # (optional) detailed description
+#         description: string
+#         # (required) data type of the parameter
+#         type:  string
+#         # (optional) default value that will be used if none is provided
+#         default: string | num
+#         # (optional) whether the parameter is required
+#         required: bool
+#         # (optional) enumerate valid input options
+#         options:
+#           - name: string
+#             value: string | num
