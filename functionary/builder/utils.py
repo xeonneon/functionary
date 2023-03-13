@@ -40,6 +40,7 @@ def extract_package_definition(package_contents: bytes) -> dict:
             package contents from the package.yaml in the tarball
     """
     package_contents_io = io.BytesIO(package_contents)
+    tarfile = None
 
     try:
         tarfile = _get_tarfile(package_contents_io)
@@ -53,8 +54,12 @@ def extract_package_definition(package_contents: bytes) -> dict:
         raise InvalidPackage("package.yaml not found")
     except (InvalidPackage, YAMLError):
         raise InvalidPackage("package.yaml is invalid YAML")
+    except Exception as err:
+        logger.error(f"Failed extracting package definition: {err}")
+        raise InvalidPackage("failed to extract package definition")
     finally:
-        tarfile.close()
+        if tarfile:
+            tarfile.close()
         package_contents_io.close()
 
 
