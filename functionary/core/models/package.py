@@ -1,11 +1,15 @@
 """ Package model """
 import uuid
+from typing import TYPE_CHECKING
 
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 from django.db.models import QuerySet
 
 from core.models import Environment
+
+if TYPE_CHECKING:
+    from core.models import Function
 
 
 class Package(models.Model):
@@ -77,20 +81,37 @@ class Package(models.Model):
             self._update_status(self.COMPLETE)
 
     def enable(self) -> None:
-        """Enable package as it's associated functions"""
-        # TODO: Add method for enabling package's functions
-        self._update_status(self.ENABLED)
+        """Enable package and it's associated functions"""
+        with transaction.atomic():
+            self._enable()
+            self._update_status(self.ENABLED)
 
     def disable(self) -> None:
         """Disable package and it's associated functions"""
-        # TODO: Add method for disabling package's functions
-        self._update_status(self.DISABLED)
+        with transaction.atomic():
+            self._disable()
+            self._update_status(self.DISABLED)
 
     def _update_status(self, status: str) -> None:
         """Update status of the package"""
         if status != self.status:
             self.status = status
             self.save()
+
+    def _enable(self) -> None:
+        """Enable all functions associated with this package"""
+        for function in self.associated_functions:
+            function.activate(update_status=False)
+
+    def _disable(self) -> None:
+        """Disable all functions associated with this package"""
+        for function in self.associated_functions:
+            function.deactivate(update_status=False)
+
+    def is_enabled(self) -> bool:
+        if self.status == self.ENABLED:
+            return True
+        return False
 
     @property
     def render_name(self) -> str:
@@ -103,6 +124,16 @@ class Package(models.Model):
         return f"{settings.REGISTRY}/{self.image_name}"
 
     @property
-    def active_functions(self) -> QuerySet:
+    def active_functions(self) -> QuerySet["Function"]:
         """Returns a QuerySet of all active functions in the package"""
         return self.functions.filter(active=True)
+
+    @property
+    def inactive_functions(self) -> QuerySet["Function"]:
+        """Returns a QuerySet of all inactive functions in the package"""
+        return self.functions.filter(active=False)
+
+    @property
+    def associated_functions(self) -> QuerySet["Function"]:
+        """Get all associated functions of this package"""
+        return self.functions.all()

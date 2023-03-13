@@ -9,6 +9,9 @@ class PackageListView(PermissionedListView):
     table_class = PackageTable
     filterset_class = PackageFilter
 
+    def get_queryset(self):
+        return super().get_queryset().filter(status=Package.ENABLED)
+
 
 class PackageDetailView(PermissionedDetailView):
     model = Package

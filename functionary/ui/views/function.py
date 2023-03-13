@@ -13,6 +13,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from core.auth import Permission
 from core.models import Environment, Function, Task
+from core.models.task import PackageDisabledError
 from core.utils.minio import S3Error, handle_file_parameters
 from ui.forms.tasks import TaskParameterForm, TaskParameterTemplateForm
 from ui.tables.function import FunctionFilter, FunctionTable
@@ -93,6 +94,9 @@ def execute(request: HttpRequest) -> HttpResponse:
 
             # Redirect to the newly created task:
             return HttpResponseRedirect(reverse("ui:task-detail", args=(task.id,)))
+        except PackageDisabledError as err:
+            status_code = 400
+            form.add_error(None, err)
         except ValidationError:
             status_code = 400
             form.add_error(

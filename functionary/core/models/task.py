@@ -12,6 +12,10 @@ from core.models import ModelSaveHookMixin, ScheduledTask
 from core.utils.parameter import validate_parameters
 
 
+class PackageDisabledError(ValidationError):
+    pass
+
+
 class Task(ModelSaveHookMixin, models.Model):
     """A Task is an individual execution of a function
 
@@ -84,6 +88,13 @@ class Task(ModelSaveHookMixin, models.Model):
                 "Function does not belong to the provided environment"
             )
 
+    def _clean_active_status(self):
+        # NOTE: If a Function's package is disabled, the function is considered disabled
+        if not self.function.package.is_enabled():
+            raise PackageDisabledError(
+                "Function's package is currently disabled.", code="invalid"
+            )
+
     def _clean_parameters(self):
         """Validate that the parameters conform to the function's schema"""
         validate_parameters(self.parameters, self.function)
@@ -96,6 +107,7 @@ class Task(ModelSaveHookMixin, models.Model):
     def clean(self):
         """Model instance validation and attribute cleanup"""
         self._clean_environment()
+        self._clean_active_status()
         self._clean_parameters()
         self._clean_function()
 

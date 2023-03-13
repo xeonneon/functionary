@@ -1,10 +1,16 @@
 """ Function model """
 import uuid
+from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
 from django.db import models
 
 from core.utils.parameter import get_schema
+
+if TYPE_CHECKING:
+    from django.db.models import QuerySet
+
+    from core.models import ScheduledTask
 
 
 def list_of_strings(value):
@@ -69,16 +75,39 @@ class Function(models.Model):
                 "Function environment must match Package environment.", code="invalid"
             )
 
+    def _clean_active_status(self):
+        # NOTE: If a Function's package is disabled, the function is considered disabled
+        if not self.package.is_enabled() and self.active:
+            raise ValidationError(
+                "Function's package is currently disabled.", code="invalid"
+            )
+
     def clean(self):
         self._clean_environment()
+        self._clean_active_status()
 
-    def deactivate(self):
+    def activate(self, update_status: bool = True):
+        """Activate the function and any associated scheduled tasks"""
+
+        # If the function is not active, and the function's package is enabled,
+        # then the function can be activated
+        if not self.active and self.package.is_enabled():
+            if update_status:
+                self.active = True
+                self.save()
+
+            for scheduled_task in self.associated_scheduled_tasks:
+                scheduled_task.activate()
+
+    def deactivate(self, update_status: bool = True):
         """Deactivate the function and pause any associated scheduled tasks"""
-        self.active = False
-        self.save()
+        if self.active:
+            if update_status:
+                self.active = False
+                self.save()
 
-        for scheduled_task in self.scheduled_tasks.all():
-            scheduled_task.pause()
+            for scheduled_task in self.associated_scheduled_tasks:
+                scheduled_task.pause()
 
     @property
     def parameters(self):
@@ -95,3 +124,8 @@ class Function(models.Model):
     def schema(self) -> dict:
         """Function definition schema"""
         return get_schema(self)
+
+    @property
+    def associated_scheduled_tasks(self) -> "QuerySet[ScheduledTask]":
+        """Get all associated scheduled tasks for this function"""
+        return self.scheduled_tasks.all()
