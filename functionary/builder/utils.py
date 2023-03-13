@@ -3,12 +3,9 @@ import json
 import logging
 import os
 import shutil
-import tarfile
-from typing import TYPE_CHECKING
 from tarfile import ReadError, TarFile
 from tarfile import open as open_tarfile
-from typing import List
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 import docker
 from celery.utils.log import get_task_logger
@@ -335,14 +332,16 @@ def build_package(build_id: "UUID") -> None:
 
 
 def _build_package(build: Build, build_resource: BuildResource, log: list[str]) -> None:
-    """Generate and build necessary resources to complete image build
+    """Generate and build necessary resources to complete package image build
 
     Args:
         build: The build object containing metadata about the build
+        build_resource: The build resource object associated with the given build
+        log: A list of strings that will be mutated. Logs will be appended to this list
+            to keep track of the build process and any errors that occur.
 
     Returns:
-        build: The build object with updated attribute values
-        build_log: The log string of the entire build process
+        None
 
     Raises:
         DockerSockerConnectionError: Raised when connection to the docker socket
@@ -441,11 +440,12 @@ def _extract_package_contents(package_contents: bytes, workdir: str) -> None:
         BuilderError: Raised when reading the tarfile resulted in an exception
     """
     package_contents_io = io.BytesIO(package_contents)
+    tarball = None
 
     try:
-        tarball = tarfile.open(fileobj=package_contents_io, mode="r")
+        tarball = open_tarfile(fileobj=package_contents_io, mode="r")
         tarball.extractall(workdir)
-    except tarfile.ReadError as err:
+    except ReadError as err:
         err_msg = f"Failed to read tarfile: {err}"
         logger.error(err_msg)
         raise BuilderError(err_msg)
@@ -454,7 +454,8 @@ def _extract_package_contents(package_contents: bytes, workdir: str) -> None:
         logger.error(err_msg)
         raise BuilderError(err_msg)
     finally:
-        tarball.close()
+        if tarball:
+            tarball.close()
         package_contents_io.close()
 
 
@@ -493,14 +494,6 @@ def _prepare_image_build(
         dockerfile: The dockerfile string containing the image details
         package_contents: The bytes that makeup the package contents
         workdir: The directory to dump the artifacts into
-
-def _extract_package_contents(package_contents: bytes, workdir: str) -> None:
-    """Extract the package tarball"""
-    package_contents_io = io.BytesIO(package_contents)
-    tarball = open_tarfile(fileobj=package_contents_io, mode="r")
-    tarball.extractall(workdir)
-    tarball.close()
-    package_contents_io.close()
 
     Raises:
         BuilderError: Raised when package content extraction or dockerfile
